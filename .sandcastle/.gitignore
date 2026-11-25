@@ -1,3 +1,6 @@
 .env
 logs/
 worktrees/
+
+# Sandcastle：密钥、日志、worktree，以及指向本机工具路径的 tsconfig.json
+tsconfig.json
