@@ -91,3 +91,12 @@ def set_budget(conn: sqlite3.Connection, category: str, amount_cents: int) -> No
 def list_budgets(conn: sqlite3.Connection) -> dict[str, int]:
     rows = conn.execute("SELECT category, amount_cents FROM budgets ORDER BY category")
     return {r[0]: r[1] for r in rows}
+
+
+def delete_budget(conn: sqlite3.Connection, category: str) -> bool:
+    category = category.strip().lower()
+    if not category:
+        return False
+    cur = conn.execute("DELETE FROM budgets WHERE category = ?", (category,))
+    conn.commit()
+    return cur.rowcount > 0
