@@ -29,9 +29,10 @@ def test_delete_missing(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> 
     assert "no expense #9" in capsys.readouterr().err
 
 
-def test_version(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize("flag", ["--version", "-V"])
+def test_version(flag: str, ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
-        main(["--version"])
+        main([flag])
     assert exc.value.code == 0
     captured = capsys.readouterr()
     assert captured.out == f"ledger {version('ledger')}\n"

@@ -7,7 +7,7 @@ uv sync
 uv run ledger add 12.50 food --note lunch
 uv run ledger list
 uv run ledger report
-uv run ledger --version
+uv run ledger --version   # or: uv run ledger -V
 ```
 
 ## Development
