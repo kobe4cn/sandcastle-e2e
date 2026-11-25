@@ -1,4 +1,4 @@
-"""Command line: ledger add | list | report | delete | budget | status."""
+"""Command line: ledger add | list | report | delete | budget | status | categories."""
 
 from __future__ import annotations
 
@@ -53,6 +53,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     status = sub.add_parser("status", help="spending vs budget per category for a month")
     status.add_argument("--month", type=_month, default=None, help="YYYY-MM, default this month")
+
+    sub.add_parser("categories", help="list categories used by expenses")
     return p
 
 
@@ -105,6 +107,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(
                     f"{cat}\t{format_cents(spent)}\t{format_cents(budget)}\t{format_cents(remaining)}"
                 )
+        elif args.cmd == "categories":
+            for cat in db.list_categories(conn):
+                print(cat)
         return 0
     finally:
         conn.close()

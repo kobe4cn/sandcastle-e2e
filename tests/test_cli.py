@@ -141,3 +141,19 @@ def test_status_defaults_to_current_month(
     capsys.readouterr()
     assert main(["status"]) == 0
     assert capsys.readouterr().out.splitlines() == ["food\t4.00\t10.00\t6.00"]
+
+
+def test_categories_distinct_sorted(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "10", "Food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20", "food ", "--on", "2026-01-03"]) == 0
+    assert main(["add", "1.50", "books", "--on", "2026-01-03"]) == 0
+    assert main(["budget", "set", "rent", "1000"]) == 0
+    capsys.readouterr()
+    assert main(["categories"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["books", "food", "travel"]
+
+
+def test_categories_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["categories"]) == 0
+    assert capsys.readouterr().out == ""

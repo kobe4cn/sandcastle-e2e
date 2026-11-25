@@ -72,6 +72,11 @@ def list_expenses(conn: sqlite3.Connection, category: str | None = None) -> list
     ]
 
 
+def list_categories(conn: sqlite3.Connection) -> list[str]:
+    rows = conn.execute("SELECT DISTINCT category FROM expenses ORDER BY category")
+    return [r[0] for r in rows]
+
+
 def delete_expense(conn: sqlite3.Connection, expense_id: int) -> bool:
     cur = conn.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
     conn.commit()
