@@ -97,3 +97,47 @@ def test_report_average_rounds_half_up(
 def test_report_average_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["report", "--average"]) == 0
     assert capsys.readouterr().out == ""
+
+
+def test_status_shows_spent_budget_and_negative_remaining(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "99", "food", "--on", "2026-02-01"]) == 0
+    assert main(["budget", "set", "food", "10"]) == 0
+    assert main(["budget", "set", "travel", "50"]) == 0
+    capsys.readouterr()
+    assert main(["status", "--month", "2026-01"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "food\t12.50\t10.00\t-2.50",
+        "travel\t0.00\t50.00\t50.00",
+    ]
+
+
+def test_status_accepts_month_without_zero_padding(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "3", "food", "--on", "2026-01-02"]) == 0
+    assert main(["budget", "set", "food", "10"]) == 0
+    capsys.readouterr()
+    assert main(["status", "--month", "2026-1"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t3.00\t10.00\t7.00"]
+
+
+def test_status_rejects_invalid_month(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["status", "--month", "2026-13"])
+    assert exc.value.code == 2
+    assert "invalid month" in capsys.readouterr().err
+
+
+def test_status_defaults_to_current_month(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # `add` without --on records today, so the default month must pick it up.
+    assert main(["add", "4", "food"]) == 0
+    assert main(["add", "99", "food", "--on", "2000-01-01"]) == 0
+    assert main(["budget", "set", "food", "10"]) == 0
+    capsys.readouterr()
+    assert main(["status"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t4.00\t10.00\t6.00"]

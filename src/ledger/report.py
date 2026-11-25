@@ -32,3 +32,14 @@ def average_by_category(expenses: list[Expense]) -> dict[str, int]:
         category: (2 * total + counts[category]) // (2 * counts[category])
         for category, total in sorted(totals.items())
     }
+
+
+def budget_status(
+    expenses: list[Expense], budgets: dict[str, int], month: str
+) -> list[tuple[str, int, int, int]]:
+    """(category, spent, budget, remaining) for each budgeted category in `month` (YYYY-MM)."""
+    spent: dict[str, int] = defaultdict(int)
+    for e in expenses:
+        if e.spent_on.strftime("%Y-%m") == month:
+            spent[e.category] += e.amount_cents
+    return [(cat, spent[cat], budgets[cat], budgets[cat] - spent[cat]) for cat in sorted(budgets)]

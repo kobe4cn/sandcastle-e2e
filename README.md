@@ -8,6 +8,10 @@ uv run ledger add 12.50 food --note lunch
 uv run ledger list
 uv run ledger report
 uv run ledger report --average   # average spend per expense, by category
+uv run ledger budget set food 300   # monthly budget for a category
+uv run ledger budget list
+uv run ledger budget rm food
+uv run ledger status --month 2026-01   # spent / budget / remaining per budgeted category; default: current month
 uv run ledger --version   # or: uv run ledger -V
 ```
 
