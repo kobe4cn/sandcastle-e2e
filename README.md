@@ -12,6 +12,7 @@ uv run ledger budget set food 300   # monthly budget for a category
 uv run ledger budget list
 uv run ledger budget rm food
 uv run ledger status --month 2026-01   # spent / budget / remaining per budgeted category; default: current month
+uv run ledger categories   # distinct expense categories, sorted
 uv run ledger --version   # or: uv run ledger -V
 ```
 

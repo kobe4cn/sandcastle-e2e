@@ -89,3 +89,16 @@ def test_delete_budget_blank_category_returns_false(conn: sqlite3.Connection) ->
     db.set_budget(conn, "food", 300)
     assert db.delete_budget(conn, "  ") is False
     assert db.list_budgets(conn) == {"food": 300}
+
+
+def test_list_categories_distinct_sorted(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 2), "travel", 300)
+    db.add_expense(conn, date(2026, 1, 2), "Food", 1000)
+    db.add_expense(conn, date(2026, 1, 3), "food ", 2000)
+    db.add_expense(conn, date(2026, 1, 3), "books", 150)
+    db.set_budget(conn, "rent", 100000)
+    assert db.list_categories(conn) == ["books", "food", "travel"]
+
+
+def test_list_categories_empty(conn: sqlite3.Connection) -> None:
+    assert db.list_categories(conn) == []
