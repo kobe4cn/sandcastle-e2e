@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -26,3 +27,12 @@ def test_add_rejects_bad_amount(ledger_db: Path, capsys: pytest.CaptureFixture[s
 def test_delete_missing(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["delete", "9"]) == 1
     assert "no expense #9" in capsys.readouterr().err
+
+
+def test_version(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["--version"])
+    assert exc.value.code == 0
+    captured = capsys.readouterr()
+    assert captured.out == f"ledger {version('ledger')}\n"
+    assert captured.err == ""
