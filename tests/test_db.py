@@ -70,3 +70,22 @@ def test_budgets_table_leaves_expenses_untouched(conn: sqlite3.Connection) -> No
     cols = [r[1] for r in conn.execute("PRAGMA table_info(expenses)")]
     assert cols == ["id", "spent_on", "category", "amount_cents", "note"]
     assert db.list_expenses(conn) == []
+
+
+def test_delete_budget(conn: sqlite3.Connection) -> None:
+    db.set_budget(conn, "food", 300)
+    assert db.delete_budget(conn, "food") is True
+    assert db.delete_budget(conn, "food") is False
+    assert db.list_budgets(conn) == {}
+
+
+def test_delete_budget_normalizes_category(conn: sqlite3.Connection) -> None:
+    db.set_budget(conn, "food", 300)
+    assert db.delete_budget(conn, " Food ") is True
+    assert db.list_budgets(conn) == {}
+
+
+def test_delete_budget_blank_category_returns_false(conn: sqlite3.Connection) -> None:
+    db.set_budget(conn, "food", 300)
+    assert db.delete_budget(conn, "  ") is False
+    assert db.list_budgets(conn) == {"food": 300}

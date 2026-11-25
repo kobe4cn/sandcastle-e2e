@@ -37,6 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
     bset.add_argument("category")
     bset.add_argument("amount")
     budget_sub.add_parser("list", help="list budgets")
+    brm = budget_sub.add_parser("rm", help="remove a category's budget")
+    brm.add_argument("category")
     return p
 
 
@@ -73,6 +75,11 @@ def main(argv: list[str] | None = None) -> int:
             elif args.budget_cmd == "list":
                 for cat, cents in db.list_budgets(conn).items():
                     print(f"{cat}\t{format_cents(cents)}")
+            elif args.budget_cmd == "rm":
+                if not db.delete_budget(conn, args.category):
+                    print(f"error: no budget for {args.category}", file=sys.stderr)
+                    return 1
+                print(f"removed budget for {args.category}")
         return 0
     finally:
         conn.close()
