@@ -42,6 +42,16 @@ def test_parse_rejects(text: str) -> None:
         parse_amount(text)
 
 
-def test_format() -> None:
-    assert format_cents(1250) == "12.50"
-    assert format_cents(5) == "0.05"
+@pytest.mark.parametrize(
+    "cents,text",
+    [
+        (1250, "12.50"),
+        (5, "0.05"),
+        (0, "0.00"),
+        (-150, "-1.50"),
+        (-5, "-0.05"),
+        (-100, "-1.00"),
+    ],
+)
+def test_format_puts_minus_before_negative_amounts(cents: int, text: str) -> None:
+    assert format_cents(cents) == text
