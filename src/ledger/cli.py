@@ -1,15 +1,23 @@
-"""Command line: ledger add | list | report | delete | budget."""
+"""Command line: ledger add | list | report | delete | budget | status."""
 
 from __future__ import annotations
 
 import argparse
 import sys
-from datetime import date
+from datetime import date, datetime
 from importlib.metadata import version
 
 from ledger import db
 from ledger.money import format_cents, parse_amount
-from ledger.report import average_by_category, totals_by_category
+from ledger.report import average_by_category, budget_status, totals_by_category
+
+
+def _month(text: str) -> str:
+    try:
+        dt = datetime.strptime(text, "%Y-%m")
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid month {text!r}, expected YYYY-MM") from None
+    return dt.strftime("%Y-%m")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -42,6 +50,9 @@ def build_parser() -> argparse.ArgumentParser:
     budget_sub.add_parser("list", help="list budgets")
     brm = budget_sub.add_parser("rm", help="remove a category's budget")
     brm.add_argument("category")
+
+    status = sub.add_parser("status", help="spending vs budget per category for a month")
+    status.add_argument("--month", type=_month, default=None, help="YYYY-MM, default this month")
     return p
 
 
@@ -87,6 +98,13 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"error: no budget for {args.category}", file=sys.stderr)
                     return 1
                 print(f"removed budget for {args.category}")
+        elif args.cmd == "status":
+            month = args.month or date.today().strftime("%Y-%m")
+            rows = budget_status(db.list_expenses(conn), db.list_budgets(conn), month)
+            for cat, spent, budget, remaining in rows:
+                print(
+                    f"{cat}\t{format_cents(spent)}\t{format_cents(budget)}\t{format_cents(remaining)}"
+                )
         return 0
     finally:
         conn.close()
