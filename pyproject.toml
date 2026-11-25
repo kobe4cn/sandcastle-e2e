@@ -1,0 +1,26 @@
+[project]
+name = "ledger"
+version = "0.1.0"
+description = "A tiny personal expense ledger backed by SQLite"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+ledger = "ledger.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
