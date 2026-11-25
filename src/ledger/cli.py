@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import date
+from importlib.metadata import version
 
 from ledger import db
 from ledger.money import format_cents, parse_amount
@@ -13,6 +14,7 @@ from ledger.report import totals_by_category
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledger")
+    p.add_argument("-V", "--version", action="version", version=f"%(prog)s {version('ledger')}")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     add = sub.add_parser("add", help="record an expense")
