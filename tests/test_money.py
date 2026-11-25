@@ -5,12 +5,38 @@ import pytest
 from ledger.money import format_cents, parse_amount
 
 
-@pytest.mark.parametrize("text,cents", [("12", 1200), ("12.5", 1250), ("0.01", 1), (" 3.40 ", 340)])
+@pytest.mark.parametrize(
+    "text,cents",
+    [
+        ("12", 1200),
+        ("12.5", 1250),
+        ("0.01", 1),
+        (" 3.40 ", 340),
+        ("1,234.50", 123450),
+        ("12,345", 1234500),
+        ("1,234,567", 123456700),
+    ],
+)
 def test_parse(text: str, cents: int) -> None:
     assert parse_amount(text) == cents
 
 
-@pytest.mark.parametrize("text", ["abc", "0", "-1", "1.234"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "abc",
+        "0",
+        "-1",
+        "1.234",
+        "1,23.4",
+        ",100",
+        "1,2345",
+        "1,,234",
+        "100,",
+        "01,234",
+        "1, 234",
+    ],
+)
 def test_parse_rejects(text: str) -> None:
     with pytest.raises(ValueError):
         parse_amount(text)
