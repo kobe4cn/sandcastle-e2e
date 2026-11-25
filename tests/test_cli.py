@@ -37,3 +37,22 @@ def test_version(flag: str, ledger_db: Path, capsys: pytest.CaptureFixture[str])
     captured = capsys.readouterr()
     assert captured.out == f"ledger {version('ledger')}\n"
     assert captured.err == ""
+
+
+def test_budget_set_and_list(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["budget", "set", "travel", "50"]) == 0
+    assert main(["budget", "set", "Food", "200"]) == 0
+    assert main(["budget", "set", "food", "300"]) == 0
+    capsys.readouterr()
+    assert main(["budget", "list"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t300.00", "travel\t50.00"]
+
+
+@pytest.mark.parametrize("amount", ["abc", "0", "1.234"])
+def test_budget_set_rejects_bad_amount(
+    amount: str, ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["budget", "set", "food", amount]) == 2
+    assert capsys.readouterr().err.startswith("error: ")
+    assert main(["budget", "list"]) == 0
+    assert capsys.readouterr().out == ""
