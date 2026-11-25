@@ -29,4 +29,7 @@ def parse_amount(text: str) -> int:
 
 
 def format_cents(cents: int) -> str:
-    return f"{cents // 100}.{cents % 100:02d}"
+    # Format the magnitude and prepend the sign: `//` floors toward -inf, so -150 would be "-2.50".
+    sign = "-" if cents < 0 else ""
+    magnitude = abs(cents)
+    return f"{sign}{magnitude // 100}.{magnitude % 100:02d}"
