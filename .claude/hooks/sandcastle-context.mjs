@@ -1,4 +1,4 @@
-// .claude/hooks/sandcastle-context.mjs —— Sandcastle 沙箱里的上下文预算守卫（由 sandcastle-pipeline onboard 装进项目）
+// .claude/hooks/sandcastle-context.mjs —— Sandcastle 沙箱里的上下文预算守卫（由 sandpipe onboard 装进项目）
 // 只在 SANDCASTLE_PROFILE 有值时生效（编排脚本给容器里的 claude 设的），宿主机上的会话不受影响。
 //
 // PreToolUse(Read)：档案标了 SANDCASTLE_NO_IMAGES=1（主模型看不到图片，如 glm-5.3）时，主线程读图片一律拦下：
