@@ -1,4 +1,4 @@
-"""Command line: ledger add | list | report | delete."""
+"""Command line: ledger add | list | report | delete | budget."""
 
 from __future__ import annotations
 
@@ -30,6 +30,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     rm = sub.add_parser("delete", help="delete an expense by id")
     rm.add_argument("id", type=int)
+
+    budget = sub.add_parser("budget", help="monthly budgets per category")
+    budget_sub = budget.add_subparsers(dest="budget_cmd", required=True)
+    bset = budget_sub.add_parser("set", help="set a category's monthly budget")
+    bset.add_argument("category")
+    bset.add_argument("amount")
+    budget_sub.add_parser("list", help="list budgets")
     return p
 
 
@@ -56,6 +63,16 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"error: no expense #{args.id}", file=sys.stderr)
                 return 1
             print(f"deleted #{args.id}")
+        elif args.cmd == "budget":
+            if args.budget_cmd == "set":
+                try:
+                    db.set_budget(conn, args.category, parse_amount(args.amount))
+                except ValueError as e:
+                    print(f"error: {e}", file=sys.stderr)
+                    return 2
+            elif args.budget_cmd == "list":
+                for cat, cents in db.list_budgets(conn).items():
+                    print(f"{cat}\t{format_cents(cents)}")
         return 0
     finally:
         conn.close()

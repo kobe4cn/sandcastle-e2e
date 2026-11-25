@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS expenses (
     amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
     note TEXT NOT NULL DEFAULT ''
 );
+CREATE TABLE IF NOT EXISTS budgets (
+    category TEXT PRIMARY KEY,
+    amount_cents INTEGER NOT NULL CHECK (amount_cents > 0)
+);
 """
 
 
@@ -33,14 +37,20 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     return conn
 
 
-def add_expense(
-    conn: sqlite3.Connection, spent_on: date, category: str, amount_cents: int, note: str = ""
-) -> int:
+def _validated_category(category: str, amount_cents: int) -> str:
+    """Shared by expenses and budgets so both store categories in the same normalized form."""
     if amount_cents <= 0:
         raise ValueError("amount must be positive")
     category = category.strip().lower()
     if not category:
         raise ValueError("category is required")
+    return category
+
+
+def add_expense(
+    conn: sqlite3.Connection, spent_on: date, category: str, amount_cents: int, note: str = ""
+) -> int:
+    category = _validated_category(category, amount_cents)
     cur = conn.execute(
         "INSERT INTO expenses (spent_on, category, amount_cents, note) VALUES (?, ?, ?, ?)",
         (spent_on.isoformat(), category, amount_cents, note),
@@ -66,3 +76,18 @@ def delete_expense(conn: sqlite3.Connection, expense_id: int) -> bool:
     cur = conn.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
     conn.commit()
     return cur.rowcount > 0
+
+
+def set_budget(conn: sqlite3.Connection, category: str, amount_cents: int) -> None:
+    category = _validated_category(category, amount_cents)
+    conn.execute(
+        "INSERT INTO budgets (category, amount_cents) VALUES (?, ?)"
+        " ON CONFLICT(category) DO UPDATE SET amount_cents = excluded.amount_cents",
+        (category, amount_cents),
+    )
+    conn.commit()
+
+
+def list_budgets(conn: sqlite3.Connection) -> dict[str, int]:
+    rows = conn.execute("SELECT category, amount_cents FROM budgets ORDER BY category")
+    return {r[0]: r[1] for r in rows}
