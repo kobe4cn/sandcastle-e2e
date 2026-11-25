@@ -70,3 +70,30 @@ def test_budget_rm(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert capsys.readouterr().out == "removed budget for food\n"
     assert main(["budget", "list"]) == 0
     assert capsys.readouterr().out == ""
+
+
+def test_report_average_sorted_by_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "1.50", "books", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--average"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["books\t1.50", "food\t15.00", "travel\t3.00"]
+
+
+def test_report_average_rounds_half_up(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "1.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "1.01", "food", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--average"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t1.01"]
+
+
+def test_report_average_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["report", "--average"]) == 0
+    assert capsys.readouterr().out == ""

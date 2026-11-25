@@ -9,7 +9,7 @@ from importlib.metadata import version
 
 from ledger import db
 from ledger.money import format_cents, parse_amount
-from ledger.report import totals_by_category
+from ledger.report import average_by_category, totals_by_category
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,7 +26,10 @@ def build_parser() -> argparse.ArgumentParser:
     ls = sub.add_parser("list", help="list expenses")
     ls.add_argument("--category")
 
-    sub.add_parser("report", help="totals by category")
+    report = sub.add_parser("report", help="totals by category")
+    report.add_argument(
+        "--average", action="store_true", help="average spend per expense by category"
+    )
 
     rm = sub.add_parser("delete", help="delete an expense by id")
     rm.add_argument("id", type=int)
@@ -58,8 +61,12 @@ def main(argv: list[str] | None = None) -> int:
             for row in db.list_expenses(conn, args.category):
                 print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
-            for cat, cents in totals_by_category(db.list_expenses(conn)).items():
-                print(f"{cat}\t{format_cents(cents)}")
+            if args.average:
+                for cat, avg in average_by_category(db.list_expenses(conn)).items():
+                    print(f"{cat}\t{format_cents(avg)}")
+            else:
+                for cat, cents in totals_by_category(db.list_expenses(conn)).items():
+                    print(f"{cat}\t{format_cents(cents)}")
         elif args.cmd == "delete":
             if not db.delete_expense(conn, args.id):
                 print(f"error: no expense #{args.id}", file=sys.stderr)
