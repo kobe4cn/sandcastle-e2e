@@ -1,6 +1,6 @@
-// Sandcastle 项目配置：编排脚本里随项目变的部分（由 sandcastle-pipeline onboard 生成，按需修改）。
-// 字段说明见 sandcastle-pipeline 的 docs/config.md。
-import { defineProject } from "sandcastle-pipeline";
+// Sandcastle 项目配置：编排脚本里随项目变的部分（由 sandpipe onboard 生成，按需修改）。
+// 字段说明见 sandpipe 的 docs/config.md。
+import { defineProject } from "sandpipe";
 
 export default defineProject({
   // forge: githubForge(),  // 默认 GitHub（宿主机的 gh）
