@@ -8,6 +8,8 @@ export default defineProject({
   autoMerge: false,
   // 同时实现几张票：受测试依赖的服务（连接数）与机器负载限制
   maxParallel: 1,
+  // 写到 GitHub 上的文字（评论、PR 正文、验收说明）用英文
+  language: "en",
 
   install: {
     // 沙箱建好后装依赖（容器是 linux，宿主机拷进来的原生包可能用不了）
