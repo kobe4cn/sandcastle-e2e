@@ -108,6 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
     count = sub.add_parser("count", help="number of recorded expenses")
     count.add_argument("--category")
     count.add_argument("--month", type=_month, default=None, help="YYYY-MM")
+    count.add_argument("--json", action="store_true", help="print the count as a JSON object")
     return p
 
 
@@ -221,7 +222,11 @@ def main(argv: list[str] | None = None) -> int:
                 for cat in categories:
                     print(cat)
         elif args.cmd == "count":
-            print(db.count_expenses(conn, args.category, month=args.month))
+            n = db.count_expenses(conn, args.category, month=args.month)
+            if args.json:
+                print(json.dumps({"count": n}))
+            else:
+                print(n)
         return 0
     finally:
         conn.close()
