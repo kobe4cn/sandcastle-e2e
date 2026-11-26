@@ -47,6 +47,15 @@ def average_by_category(expenses: list[Expense]) -> dict[str, int]:
     }
 
 
+def largest_expense_by_category(expenses: list[Expense]) -> dict[str, int]:
+    """Amount of the single largest expense per category, keyed in category-name order."""
+    largest: dict[str, int] = {}
+    for e in expenses:
+        if e.category not in largest or e.amount_cents > largest[e.category]:
+            largest[e.category] = e.amount_cents
+    return dict(sorted(largest.items()))
+
+
 def budget_status(
     expenses: list[Expense], budgets: dict[str, int], month: str
 ) -> list[tuple[str, int, int, int]]:
