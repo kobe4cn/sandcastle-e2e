@@ -7,6 +7,7 @@ from ledger import db
 from ledger.report import (
     average_by_category,
     budget_status,
+    median_by_category,
     monthly_totals,
     totals_by_category,
 )
@@ -41,6 +42,32 @@ def test_average_per_category_sorted_by_name(conn: sqlite3.Connection) -> None:
     db.add_expense(conn, date(2026, 2, 1), "food", 200)
     result = average_by_category(db.list_expenses(conn))
     assert result == {"food": 250, "rent": 1000}
+    assert list(result) == ["food", "rent"]
+
+
+def test_median_of_odd_count_is_middle_value(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 2), "food", 300)
+    db.add_expense(conn, date(2026, 1, 3), "food", 200)
+    assert median_by_category(db.list_expenses(conn)) == {"food": 200}
+
+
+def test_median_of_even_count_is_lower_middle_value(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 2), "food", 200)
+    assert median_by_category(db.list_expenses(conn)) == {"food": 100}
+
+
+def test_median_of_empty_list_is_empty() -> None:
+    assert median_by_category([]) == {}
+
+
+def test_median_per_category_sorted_by_name(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "rent", 1000)
+    db.add_expense(conn, date(2026, 1, 2), "food", 300)
+    db.add_expense(conn, date(2026, 2, 1), "food", 200)
+    result = median_by_category(db.list_expenses(conn))
+    assert result == {"food": 200, "rent": 1000}
     assert list(result) == ["food", "rent"]
 
 

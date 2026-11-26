@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from statistics import median_low
 
 from ledger.db import Expense
 
@@ -32,6 +33,14 @@ def average_by_category(expenses: list[Expense]) -> dict[str, int]:
         category: (2 * total + counts[category]) // (2 * counts[category])
         for category, total in sorted(totals.items())
     }
+
+
+def median_by_category(expenses: list[Expense]) -> dict[str, int]:
+    # Lower median for even counts so the result is always an actual amount in whole cents.
+    groups: dict[str, list[int]] = defaultdict(list)
+    for e in expenses:
+        groups[e.category].append(e.amount_cents)
+    return {category: median_low(xs) for category, xs in sorted(groups.items())}
 
 
 def budget_status(
