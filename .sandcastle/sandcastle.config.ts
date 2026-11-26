@@ -5,7 +5,7 @@ import { defineProject } from "sandpipe";
 export default defineProject({
   // forge: githubForge(),  // 默认 GitHub（宿主机的 gh）
   // 试跑期：只开 PR 不合并、一次一张。按 docs/onboarding-checklist.md 走完前几张票再打开自动合并、调高并行数。
-  autoMerge: true,
+  autoMerge: false,
   // 同时实现几张票：受测试依赖的服务（连接数）与机器负载限制
   maxParallel: 1,
   // 写到 GitHub 上的文字（评论、PR 正文、验收说明）用英文
