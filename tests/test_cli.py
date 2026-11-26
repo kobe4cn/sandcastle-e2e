@@ -336,3 +336,29 @@ def test_list_min_filters_before_category_reverse_and_limit(
     _add_three_out_of_order(capsys)
     assert main(["list", *list_args]) == 0
     assert capsys.readouterr().out.splitlines() == expected
+
+
+def test_list_max_hides_expenses_above_amount(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "9.99", "food", "--on", "2026-01-01"]) == 0
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "12.50", "travel", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--max", "10"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "1\t2026-01-01\tfood\t9.99\t",
+        "2\t2026-01-02\tfood\t10.00\t",
+    ]
+
+
+@pytest.mark.parametrize(
+    "max_args", [["--max", "abc"], ["--max", "0"], ["--max=-1"], ["--max", "1.234"]]
+)
+def test_list_rejects_invalid_max(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str], max_args: list[str]
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["list", *max_args])
+    assert exc.value.code == 2
+    assert "invalid amount" in capsys.readouterr().err

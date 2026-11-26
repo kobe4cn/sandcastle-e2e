@@ -30,6 +30,14 @@ def test_filter_by_min_cents_combines_with_category(conn: sqlite3.Connection) ->
     assert [r.amount_cents for r in db.list_expenses(conn, "food", min_cents=1000)] == [1000]
 
 
+def test_filter_by_max_cents_combines_with_category(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 1000)
+    db.add_expense(conn, date(2026, 1, 2), "food", 1001)
+    db.add_expense(conn, date(2026, 1, 3), "travel", 500)
+    assert [r.amount_cents for r in db.list_expenses(conn, max_cents=1000)] == [1000, 500]
+    assert [r.amount_cents for r in db.list_expenses(conn, "food", max_cents=1000)] == [1000]
+
+
 @pytest.mark.parametrize("amount,category", [(0, "food"), (-5, "food"), (100, "  ")])
 def test_rejects_invalid(conn: sqlite3.Connection, amount: int, category: str) -> None:
     with pytest.raises(ValueError):
