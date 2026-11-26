@@ -104,8 +104,14 @@ def list_categories(conn: sqlite3.Connection) -> list[str]:
     return [r[0] for r in rows]
 
 
-def count_expenses(conn: sqlite3.Connection, category: str | None = None) -> int:
+def count_expenses(
+    conn: sqlite3.Connection, category: str | None = None, *, month: str | None = None
+) -> int:
+    """Count expenses, optionally only those spent in ``month`` (a normalized ``YYYY-MM``)."""
     where, args = _category_filter(category)
+    if month is not None:
+        where += " AND spent_on LIKE ?" if where else " WHERE spent_on LIKE ?"
+        args += (f"{month}-%",)
     return int(conn.execute(f"SELECT COUNT(*) FROM expenses{where}", args).fetchone()[0])
 
 

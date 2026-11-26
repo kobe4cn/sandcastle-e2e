@@ -144,6 +144,16 @@ def test_count_expenses_filters_by_normalized_category(conn: sqlite3.Connection)
     assert db.count_expenses(conn, "rent") == 0
 
 
+def test_count_expenses_filters_by_month(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 31), "travel", 200)
+    db.add_expense(conn, date(2026, 2, 1), "food", 300)
+    db.add_expense(conn, date(2025, 1, 15), "food", 400)
+    assert db.count_expenses(conn, month="2026-01") == 2
+    assert db.count_expenses(conn, "food", month="2026-01") == 1
+    assert db.count_expenses(conn, month="2026-03") == 0
+
+
 def test_rename_category_moves_all_expenses_and_returns_count(conn: sqlite3.Connection) -> None:
     db.add_expense(conn, date(2026, 1, 1), "food", 100)
     db.add_expense(conn, date(2026, 1, 2), "Food", 200)
