@@ -166,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
             if not db.delete_expense(conn, args.id):
                 print(f"error: no expense #{args.id}", file=sys.stderr)
                 return 1
-            print(f"deleted #{args.id}")
+            print(f"deleted expense id {args.id}")
         elif args.cmd == "budget":
             if args.budget_cmd == "set":
                 try:

@@ -41,7 +41,7 @@ uv run ledger list
 # 1	2026-01-02	food	12.50	lunch
 # 2	2026-01-03	coffee	4.20
 uv run ledger delete 1
-# deleted #1
+# deleted expense id 1
 ```
 
 If no expense has that id, nothing is deleted: the command prints `error: no expense #<id>`
