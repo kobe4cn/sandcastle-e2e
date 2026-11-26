@@ -103,7 +103,11 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("--json", action="store_true", help="print status as a JSON array")
 
     cats = sub.add_parser("categories", help="list categories used by expenses")
-    cats.add_argument("--json", action="store_true", help="print categories as a JSON array")
+    cats_fmt = cats.add_mutually_exclusive_group()
+    cats_fmt.add_argument("--json", action="store_true", help="print categories as a JSON array")
+    cats_fmt.add_argument(
+        "--count", action="store_true", help="print each category with its expense count"
+    )
 
     count = sub.add_parser("count", help="number of recorded expenses")
     count.add_argument("--category")
@@ -218,6 +222,9 @@ def main(argv: list[str] | None = None) -> int:
             categories = db.list_categories(conn)
             if args.json:
                 print(json.dumps(categories, ensure_ascii=False))
+            elif args.count:
+                for cat in categories:
+                    print(f"{cat}\t{db.count_expenses(conn, cat)}")
             else:
                 for cat in categories:
                     print(cat)
