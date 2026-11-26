@@ -30,6 +30,13 @@ def _positive_int(text: str) -> int:
     return n
 
 
+def _amount(text: str) -> int:
+    try:
+        return parse_amount(text)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(f"invalid amount {text!r}: {e}") from None
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledger")
     p.add_argument("-V", "--version", action="version", version=f"%(prog)s {version('ledger')}")
@@ -45,6 +52,13 @@ def build_parser() -> argparse.ArgumentParser:
     ls.add_argument("--category")
     ls.add_argument("--limit", type=_positive_int, default=None, help="show at most N expenses")
     ls.add_argument("--reverse", action="store_true", help="newest first")
+    ls.add_argument(
+        "--min",
+        type=_amount,
+        default=None,
+        dest="min_cents",
+        help="only expenses of at least this amount",
+    )
 
     report = sub.add_parser("report", help="totals by category")
     report.add_argument(
@@ -87,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             print(f"added #{new_id}")
         elif args.cmd == "list":
-            expenses = db.list_expenses(conn, args.category)
+            expenses = db.list_expenses(conn, args.category, min_cents=args.min_cents)
             if args.reverse:
                 expenses = expenses[::-1]
             if args.limit is not None:

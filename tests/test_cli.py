@@ -291,3 +291,29 @@ def test_list_reverse_with_category_filters_then_reverses(
         "1\t2026-01-03\tfood\t1.00\t",
         "2\t2026-01-01\tfood\t2.00\t",
     ]
+
+
+def test_list_min_hides_expenses_below_amount(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "9.99", "food", "--on", "2026-01-01"]) == 0
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "12.50", "travel", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--min", "10"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "2\t2026-01-02\tfood\t10.00\t",
+        "3\t2026-01-03\ttravel\t12.50\t",
+    ]
+
+
+@pytest.mark.parametrize(
+    "min_args", [["--min", "abc"], ["--min", "0"], ["--min=-1"], ["--min", "1.234"]]
+)
+def test_list_rejects_invalid_min(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str], min_args: list[str]
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["list", *min_args])
+    assert exc.value.code == 2
+    assert "invalid amount" in capsys.readouterr().err
