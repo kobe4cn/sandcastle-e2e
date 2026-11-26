@@ -102,3 +102,16 @@ def test_list_categories_distinct_sorted(conn: sqlite3.Connection) -> None:
 
 def test_list_categories_empty(conn: sqlite3.Connection) -> None:
     assert db.list_categories(conn) == []
+
+
+def test_count_expenses_empty(conn: sqlite3.Connection) -> None:
+    assert db.count_expenses(conn) == 0
+
+
+def test_count_expenses_filters_by_normalized_category(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 2), "Food", 200)
+    db.add_expense(conn, date(2026, 1, 2), "travel", 300)
+    assert db.count_expenses(conn) == 3
+    assert db.count_expenses(conn, " FOOD ") == 2
+    assert db.count_expenses(conn, "rent") == 0

@@ -60,12 +60,16 @@ def add_expense(
     return cur.lastrowid
 
 
+def _category_filter(category: str | None) -> tuple[str, tuple[str, ...]]:
+    """WHERE clause for an optional category filter; empty means no filter. Normalized like writes."""
+    if not category:
+        return "", ()
+    return " WHERE category = ?", (category.strip().lower(),)
+
+
 def list_expenses(conn: sqlite3.Connection, category: str | None = None) -> list[Expense]:
-    sql = "SELECT id, spent_on, category, amount_cents, note FROM expenses"
-    args: tuple[str, ...] = ()
-    if category:
-        sql += " WHERE category = ?"
-        args = (category.strip().lower(),)
+    where, args = _category_filter(category)
+    sql = f"SELECT id, spent_on, category, amount_cents, note FROM expenses{where}"
     sql += " ORDER BY spent_on, id"
     return [
         Expense(r[0], date.fromisoformat(r[1]), r[2], r[3], r[4]) for r in conn.execute(sql, args)
@@ -75,6 +79,11 @@ def list_expenses(conn: sqlite3.Connection, category: str | None = None) -> list
 def list_categories(conn: sqlite3.Connection) -> list[str]:
     rows = conn.execute("SELECT DISTINCT category FROM expenses ORDER BY category")
     return [r[0] for r in rows]
+
+
+def count_expenses(conn: sqlite3.Connection, category: str | None = None) -> int:
+    where, args = _category_filter(category)
+    return int(conn.execute(f"SELECT COUNT(*) FROM expenses{where}", args).fetchone()[0])
 
 
 def delete_expense(conn: sqlite3.Connection, expense_id: int) -> bool:
