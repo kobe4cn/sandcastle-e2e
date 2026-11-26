@@ -25,6 +25,7 @@ uv run ledger categories   # distinct expense categories, sorted
 uv run ledger categories --json   # same, as a JSON array, e.g. ["food", "rent"]
 uv run ledger count   # number of recorded expenses
 uv run ledger count --category food   # number of expenses in one category
+uv run ledger count --json   # same, as a JSON object, e.g. {"count": 3}; combines with --category
 uv run ledger --version   # or: uv run ledger -V
 ```
 

@@ -259,6 +259,33 @@ def test_count_with_category_counts_only_that_category(
     assert capsys.readouterr().out.splitlines() == ["2"]
 
 
+def test_count_json_prints_count_object(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "5", "Food", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["count", "--json"]) == 0
+    assert capsys.readouterr().out == '{"count": 3}\n'
+
+
+def test_count_json_with_category_counts_only_that_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "5", "Food", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["count", "--category", "FOOD", "--json"]) == 0
+    assert capsys.readouterr().out == '{"count": 2}\n'
+
+
+def test_count_json_empty_prints_zero(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["count", "--json"]) == 0
+    assert capsys.readouterr().out == '{"count": 0}\n'
+
+
 def test_list_limit_prints_first_n(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["add", "1", "food", "--on", "2026-01-03"]) == 0
     assert main(["add", "2", "food", "--on", "2026-01-01"]) == 0
