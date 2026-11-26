@@ -11,6 +11,7 @@ uv run ledger list --limit 2   # at most 2 expenses, oldest first
 uv run ledger list --reverse   # newest first; combines with --category and --limit
 uv run ledger list --min 10   # only expenses of at least 10.00; combines with --category, --reverse and --limit (filters first)
 uv run ledger list --max 10   # only expenses of at most 10.00; combines with --category, --min, --reverse and --limit (filters first)
+uv run ledger list --json   # same, as a JSON array of objects with id, date, amount, category and note; combines with --category, --min, --max, --reverse and --limit
 uv run ledger delete 3   # delete an expense by id (ids come from ledger list)
 uv run ledger report
 uv run ledger report --average   # average spend per expense, by category
