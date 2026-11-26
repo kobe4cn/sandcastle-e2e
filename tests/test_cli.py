@@ -93,6 +93,37 @@ def test_report_average_sorted_by_category(
     assert capsys.readouterr().out.splitlines() == ["books\t1.50", "food\t15.00", "travel\t3.00"]
 
 
+def test_report_category_prints_only_that_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--category", "food"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t30.00"]
+
+
+def test_report_category_with_average_prints_only_that_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--category", "FOOD", "--average"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t15.00"]
+
+
+def test_report_unknown_category_prints_nothing(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--category", "rent"]) == 0
+    assert capsys.readouterr().out == ""
+
+
 def test_report_average_rounds_half_up(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
