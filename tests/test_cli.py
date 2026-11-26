@@ -246,3 +246,48 @@ def test_list_rejects_non_positive_limit(
         main(["list", *limit_args])
     assert exc.value.code == 2
     assert "invalid limit" in capsys.readouterr().err
+
+
+def _add_three_out_of_order(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["add", "1", "food", "--on", "2026-01-03"]) == 0
+    assert main(["add", "2", "food", "--on", "2026-01-01"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+
+
+def test_list_reverse_prints_newest_first(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_three_out_of_order(capsys)
+    assert main(["list"]) == 0
+    oldest_first = capsys.readouterr().out.splitlines()
+    assert main(["list", "--reverse"]) == 0
+    newest_first = capsys.readouterr().out.splitlines()
+    assert newest_first == [
+        "1\t2026-01-03\tfood\t1.00\t",
+        "3\t2026-01-02\ttravel\t3.00\t",
+        "2\t2026-01-01\tfood\t2.00\t",
+    ]
+    assert newest_first == oldest_first[::-1]
+
+
+def test_list_reverse_with_limit_prints_n_newest(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_three_out_of_order(capsys)
+    assert main(["list", "--reverse", "--limit", "2"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "1\t2026-01-03\tfood\t1.00\t",
+        "3\t2026-01-02\ttravel\t3.00\t",
+    ]
+
+
+def test_list_reverse_with_category_filters_then_reverses(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_three_out_of_order(capsys)
+    assert main(["list", "--reverse", "--category", "FOOD"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "1\t2026-01-03\tfood\t1.00\t",
+        "2\t2026-01-01\tfood\t2.00\t",
+    ]

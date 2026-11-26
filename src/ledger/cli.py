@@ -44,6 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     ls = sub.add_parser("list", help="list expenses")
     ls.add_argument("--category")
     ls.add_argument("--limit", type=_positive_int, default=None, help="show at most N expenses")
+    ls.add_argument("--reverse", action="store_true", help="newest first")
 
     report = sub.add_parser("report", help="totals by category")
     report.add_argument(
@@ -87,6 +88,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"added #{new_id}")
         elif args.cmd == "list":
             expenses = db.list_expenses(conn, args.category)
+            if args.reverse:
+                expenses = expenses[::-1]
             if args.limit is not None:
                 expenses = expenses[: args.limit]
             for row in expenses:
