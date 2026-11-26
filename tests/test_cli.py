@@ -156,6 +156,39 @@ def test_report_average_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str
     assert capsys.readouterr().out == ""
 
 
+def test_report_share_prints_percentage_per_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "25", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "15", "rent", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--share"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t62.5%", "rent\t37.5%"]
+
+
+def test_report_share_empty_prints_nothing(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["report", "--share"]) == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_report_share_with_category_is_whole_share(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "25", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "15", "rent", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--share", "--category", "food"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t100.0%"]
+
+
+def test_report_share_and_average_are_mutually_exclusive(ledger_db: Path) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["report", "--share", "--average"])
+    assert exc.value.code == 2
+
+
 def test_status_shows_spent_budget_and_negative_remaining(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

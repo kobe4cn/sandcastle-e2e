@@ -10,7 +10,12 @@ from importlib.metadata import version
 
 from ledger import db
 from ledger.money import format_cents, parse_amount
-from ledger.report import average_by_category, budget_status, totals_by_category
+from ledger.report import (
+    average_by_category,
+    budget_status,
+    category_share,
+    totals_by_category,
+)
 
 
 def _month(text: str) -> str:
@@ -72,8 +77,12 @@ def build_parser() -> argparse.ArgumentParser:
     ls.add_argument("--json", action="store_true", help="print expenses as a JSON array")
 
     report = sub.add_parser("report", help="totals by category")
-    report.add_argument(
+    report_mode = report.add_mutually_exclusive_group()
+    report_mode.add_argument(
         "--average", action="store_true", help="average spend per expense, per category"
+    )
+    report_mode.add_argument(
+        "--share", action="store_true", help="percentage of total spending, per category"
     )
     report.add_argument("--category", help="only report this category")
 
@@ -146,6 +155,9 @@ def main(argv: list[str] | None = None) -> int:
             if args.average:
                 for cat, avg in average_by_category(rows).items():
                     print(f"{cat}\t{format_cents(avg)}")
+            elif args.share:
+                for cat, share in category_share(rows).items():
+                    print(f"{cat}\t{share:.1f}%")
             else:
                 for cat, cents in totals_by_category(rows).items():
                     print(f"{cat}\t{format_cents(cents)}")
