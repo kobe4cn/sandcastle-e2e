@@ -3,11 +3,15 @@ from __future__ import annotations
 import sqlite3
 from datetime import date
 
+import pytest
+
 from ledger import db
 from ledger.report import (
     average_by_category,
     budget_status,
     category_share,
+    change_percent,
+    compare_months,
     largest_expense_by_category,
     monthly_totals,
     totals_by_category,
@@ -108,3 +112,52 @@ def test_budget_status_omits_categories_without_budget(conn: sqlite3.Connection)
     assert budget_status(db.list_expenses(conn), {"food": 300}, "2026-01") == [
         ("food", 100, 300, 200)
     ]
+
+
+def test_compare_months_sorted_by_category_name(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 3, 1), "rent", 100000)
+    db.add_expense(conn, date(2026, 3, 2), "food", 2000)
+    db.add_expense(conn, date(2026, 3, 3), "food", 1750)
+    db.add_expense(conn, date(2026, 2, 5), "food", 3000)
+    db.add_expense(conn, date(2026, 2, 6), "rent", 100000)
+    db.add_expense(conn, date(2026, 1, 6), "food", 9999)
+    result = compare_months(db.list_expenses(conn), "2026-03", "2026-02")
+    assert result == [("food", 3750, 3000), ("rent", 100000, 100000)]
+
+
+def test_compare_months_includes_category_in_only_one_month(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 3, 1), "books", 500)
+    db.add_expense(conn, date(2026, 2, 1), "travel", 1200)
+    result = compare_months(db.list_expenses(conn), "2026-03", "2026-02")
+    assert result == [("books", 500, 0), ("travel", 0, 1200)]
+
+
+def test_compare_months_across_year_boundary(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 300)
+    db.add_expense(conn, date(2025, 12, 31), "food", 200)
+    db.add_expense(conn, date(2025, 1, 15), "food", 9999)
+    result = compare_months(db.list_expenses(conn), "2026-01", "2025-12")
+    assert result == [("food", 300, 200)]
+
+
+def test_compare_months_empty_when_neither_month_has_expenses(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 300)
+    assert compare_months(db.list_expenses(conn), "2026-03", "2026-02") == []
+
+
+@pytest.mark.parametrize(
+    "current,previous,expected",
+    [
+        (3750, 3000, 25),
+        (105, 100, 5),
+        (201, 200, 1),
+        (199, 200, -1),
+        (0, 100, -100),
+        (100, 100, 0),
+        (100, 0, None),
+    ],
+)
+def test_change_percent_rounds_half_away_from_zero(
+    current: int, previous: int, expected: int | None
+) -> None:
+    assert change_percent(current, previous) == expected

@@ -32,6 +32,7 @@ uv run ledger count --month 2026-01   # only expenses in that month; combines wi
 uv run ledger count --json   # same, as a JSON object, e.g. {"count": 3}; combines with --category and --month
 uv run ledger export   # all expenses as CSV (id,date,category,amount,note) on stdout
 uv run ledger export --output out.csv --category food   # write to a file; prints "exported N expenses to PATH"
+uv run ledger compare --month 2026-03   # per-category change vs the previous month; default: current month
 uv run ledger --version   # or: uv run ledger -V
 ```
 
@@ -76,6 +77,18 @@ uv run ledger status --month 2026-01 --json
 # [{"category": "food", "spent": "12.50", "budget": "10.00"}, {"category": "travel", "spent": "0.00", "budget": "50.00"}]
 uv run ledger budget rm travel
 # Removed budget for travel
+```
+
+`ledger compare --month YYYY-MM` prints one tab-separated line per category with spending in
+that month or the month before, sorted by category name: category, month total, previous month
+total, signed change and signed change percent rounded to a whole number (half away from zero).
+A category missing from one month shows `0.00` for it; when the previous total is `0.00` the
+percent is `n/a`. If neither month has expenses it prints `no expenses`.
+
+```bash
+uv run ledger compare --month 2026-03
+# books	4.20	0.00	+4.20	n/a
+# food	37.50	30.00	+7.50	+25%
 ```
 
 `budget set` prints `budget for <category> set to <amount>` on success. Setting a category again replaces its budget, and

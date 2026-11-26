@@ -739,3 +739,62 @@ def test_export_unwritable_output_is_an_error(
     assert captured.out == ""
     assert captured.err.startswith("error: ")
     assert not path.exists()
+
+
+def test_compare_prints_month_over_month_per_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "30", "food", "--on", "2026-02-10"]) == 0
+    assert main(["add", "37.50", "food", "--on", "2026-03-05"]) == 0
+    assert main(["add", "20", "travel", "--on", "2026-02-11"]) == 0
+    assert main(["add", "15", "travel", "--on", "2026-03-12"]) == 0
+    assert main(["add", "4.20", "books", "--on", "2026-03-01"]) == 0
+    assert main(["add", "8", "rent", "--on", "2026-02-01"]) == 0
+    assert main(["add", "99", "food", "--on", "2026-01-31"]) == 0
+    capsys.readouterr()
+    assert main(["compare", "--month", "2026-03"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "books\t4.20\t0.00\t+4.20\tn/a",
+        "food\t37.50\t30.00\t+7.50\t+25%",
+        "rent\t0.00\t8.00\t-8.00\t-100%",
+        "travel\t15.00\t20.00\t-5.00\t-25%",
+    ]
+
+
+def test_compare_unchanged_category_prints_signed_zero(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2025-12-31"]) == 0
+    assert main(["add", "10", "food", "--on", "2026-01-01"]) == 0
+    capsys.readouterr()
+    assert main(["compare", "--month", "2026-01"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t10.00\t10.00\t+0.00\t+0%"]
+
+
+def test_compare_prints_no_expenses_when_both_months_empty(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_across_months()
+    capsys.readouterr()
+    assert main(["compare", "--month", "2026-05"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["no expenses"]
+
+
+def test_compare_rejects_invalid_month(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["compare", "--month", "2026-13"])
+    assert exc.value.code == 2
+    assert "invalid month" in capsys.readouterr().err
+
+
+def test_compare_defaults_to_current_month(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # `add` without --on records today, so the default month must pick it up.
+    assert main(["add", "4", "food"]) == 0
+    assert main(["add", "99", "food", "--on", "2000-01-01"]) == 0
+    capsys.readouterr()
+    assert main(["compare"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t4.00\t0.00\t+4.00\tn/a"]
