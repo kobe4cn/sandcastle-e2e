@@ -601,7 +601,20 @@ def test_categories_count(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -
     assert main(["add", "1.50", "books", "--on", "2026-01-03"]) == 0
     capsys.readouterr()
     assert main(["categories", "--count"]) == 0
-    assert capsys.readouterr().out.splitlines() == ["books\t1", "food\t2"]
+    assert capsys.readouterr().out.splitlines() == ["food\t2", "books\t1"]
+
+
+def test_categories_count_ties_sorted_alphabetically(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20", "food", "--on", "2026-01-03"]) == 0
+    assert main(["add", "1.50", "books", "--on", "2026-01-03"]) == 0
+    assert main(["add", "3", "art", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["categories", "--count"]) == 0
+    out = capsys.readouterr().out
+    assert out.splitlines() == ["food\t2", "art\t1", "books\t1"]
 
 
 def test_categories_count_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:

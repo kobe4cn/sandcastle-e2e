@@ -223,8 +223,9 @@ def main(argv: list[str] | None = None) -> int:
             if args.json:
                 print(json.dumps(categories, ensure_ascii=False))
             elif args.count:
-                for cat in categories:
-                    print(f"{cat}\t{db.count_expenses(conn, cat)}")
+                counts = [(cat, db.count_expenses(conn, cat)) for cat in categories]
+                for cat, n in sorted(counts, key=lambda p: -p[1]):
+                    print(f"{cat}\t{n}")
             else:
                 for cat in categories:
                     print(cat)
