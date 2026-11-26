@@ -60,6 +60,14 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="AMOUNT",
         help="only expenses of at least this amount",
     )
+    ls.add_argument(
+        "--max",
+        type=_amount,
+        default=None,
+        dest="max_cents",
+        metavar="AMOUNT",
+        help="only expenses of at most this amount",
+    )
 
     report = sub.add_parser("report", help="totals by category")
     report.add_argument(
@@ -102,7 +110,9 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             print(f"added #{new_id}")
         elif args.cmd == "list":
-            expenses = db.list_expenses(conn, args.category, min_cents=args.min_cents)
+            expenses = db.list_expenses(
+                conn, args.category, min_cents=args.min_cents, max_cents=args.max_cents
+            )
             if args.reverse:
                 expenses = expenses[::-1]
             if args.limit is not None:
