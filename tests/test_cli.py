@@ -286,6 +286,15 @@ def test_count_json_empty_prints_zero(ledger_db: Path, capsys: pytest.CaptureFix
     assert capsys.readouterr().out == '{"count": 0}\n'
 
 
+def test_count_json_unknown_category_prints_zero(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["count", "--category", "nosuch", "--json"]) == 0
+    assert capsys.readouterr().out == '{"count": 0}\n'
+
+
 def test_list_limit_prints_first_n(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["add", "1", "food", "--on", "2026-01-03"]) == 0
     assert main(["add", "2", "food", "--on", "2026-01-01"]) == 0
