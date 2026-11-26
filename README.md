@@ -30,6 +30,8 @@ uv run ledger count   # number of recorded expenses
 uv run ledger count --category food   # number of expenses in one category
 uv run ledger count --month 2026-01   # only expenses in that month; combines with --category
 uv run ledger count --json   # same, as a JSON object, e.g. {"count": 3}; combines with --category and --month
+uv run ledger export   # all expenses as CSV (id,date,category,amount,note) on stdout
+uv run ledger export --output out.csv --category food   # write to a file; prints "exported N expenses to PATH"
 uv run ledger --version   # or: uv run ledger -V
 ```
 

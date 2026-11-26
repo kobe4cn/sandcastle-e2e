@@ -8,3 +8,4 @@
 - Print "no expenses" when `ledger report` has nothing to show (#103)
 - Print "no budgets set" from `ledger status` when no budgets exist (#104)
 - Print "no categories" when `ledger categories` has nothing to show (#107)
+- Add `ledger export` (#110)

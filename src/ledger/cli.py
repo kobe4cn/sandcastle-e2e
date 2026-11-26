@@ -1,4 +1,4 @@
-"""Command line: ledger add | list | report | delete | budget | status | categories | count."""
+"""Command line: ledger add | list | report | delete | budget | status | categories | count | export."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import sys
 from datetime import date, datetime
 
 from ledger import __version__, db
+from ledger.export import expenses_to_csv
 from ledger.money import format_cents, parse_amount
 from ledger.report import (
     average_by_category,
@@ -113,6 +114,10 @@ def build_parser() -> argparse.ArgumentParser:
     count.add_argument("--category")
     count.add_argument("--month", type=_month, default=None, help="YYYY-MM")
     count.add_argument("--json", action="store_true", help="print the count as a JSON object")
+
+    export = sub.add_parser("export", help="write expenses as CSV")
+    export.add_argument("--category")
+    export.add_argument("--output", metavar="PATH", help="write to a file instead of stdout")
     return p
 
 
@@ -244,6 +249,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"count": n}))
             else:
                 print(n)
+        elif args.cmd == "export":
+            rows = db.list_expenses(conn, args.category)
+            text = expenses_to_csv(rows)
+            if args.output is None:
+                sys.stdout.write(text)
+            else:
+                try:
+                    with open(args.output, "w", newline="", encoding="utf-8") as f:
+                        f.write(text)
+                except OSError as e:
+                    print(f"error: {e}", file=sys.stderr)
+                    return 1
+                print(f"exported {len(rows)} expenses to {args.output}")
         return 0
     finally:
         conn.close()

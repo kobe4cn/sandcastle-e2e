@@ -682,3 +682,60 @@ def test_categories_count_and_json_rejected(ledger_db: Path) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["categories", "--count", "--json"])
     assert exc.value.code == 2
+
+
+def test_export_writes_csv_to_stdout(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02", "--note", "lunch, late"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["export"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == (
+        "id,date,category,amount,note\n"
+        '1,2026-01-02,food,12.50,"lunch, late"\n'
+        "2,2026-01-03,travel,3.00,\n"
+    )
+    assert captured.err == ""
+
+
+def test_export_output_file_filtered_by_category(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02", "--note", "lunch"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    path = tmp_path / "out.csv"
+    assert main(["export", "--output", str(path), "--category", " Food "]) == 0
+    assert capsys.readouterr().out == f"exported 1 expenses to {path}\n"
+    assert path.read_text(encoding="utf-8") == (
+        "id,date,category,amount,note\n1,2026-01-02,food,12.50,lunch\n"
+    )
+
+
+def test_export_empty_prints_header_only(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["export"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == "id,date,category,amount,note\n"
+    assert captured.err == ""
+
+
+def test_export_empty_to_file_writes_header_only(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "out.csv"
+    assert main(["export", "--output", str(path)]) == 0
+    assert capsys.readouterr().out == f"exported 0 expenses to {path}\n"
+    assert path.read_text(encoding="utf-8") == "id,date,category,amount,note\n"
+
+
+def test_export_unwritable_output_is_an_error(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "missing" / "out.csv"
+    assert main(["export", "--output", str(path)]) == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err.startswith("error: ")
+    assert not path.exists()
