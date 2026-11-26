@@ -1,19 +1,21 @@
-"""Command line: ledger add | list | report | delete | budget | status | categories | count | export."""
+"""Command line: ledger add | list | report | delete | budget | status | categories | count | export | compare."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from ledger import __version__, db
 from ledger.export import expenses_to_csv
-from ledger.money import format_cents, parse_amount
+from ledger.money import format_cents, format_signed_cents, parse_amount
 from ledger.report import (
     average_by_category,
     budget_status,
     category_share,
+    change_percent,
+    compare_months,
     totals_by_category,
 )
 
@@ -114,6 +116,9 @@ def build_parser() -> argparse.ArgumentParser:
     count.add_argument("--category")
     count.add_argument("--month", type=_month, default=None, help="YYYY-MM")
     count.add_argument("--json", action="store_true", help="print the count as a JSON object")
+
+    compare = sub.add_parser("compare", help="per-category spending vs the previous month")
+    compare.add_argument("--month", type=_month, default=None, help="YYYY-MM, default this month")
 
     export = sub.add_parser("export", help="write expenses as CSV")
     export.add_argument("--category")
@@ -249,6 +254,23 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"count": n}))
             else:
                 print(n)
+        elif args.cmd == "compare":
+            month = args.month or date.today().strftime("%Y-%m")
+            # The day before the 1st is in the previous month, including across a year boundary.
+            previous = (date.fromisoformat(month + "-01") - timedelta(days=1)).strftime("%Y-%m")
+            changes = compare_months(db.list_expenses(conn), month, previous)
+            if not changes:
+                print("no expenses")
+            for cat, cur, prev in changes:
+                pct = change_percent(cur, prev)
+                if pct is None:
+                    pct_text = "n/a"
+                else:
+                    pct_text = f"{'-' if pct < 0 else '+'}{abs(pct)}%"
+                print(
+                    f"{cat}\t{format_cents(cur)}\t{format_cents(prev)}\t"
+                    f"{format_signed_cents(cur - prev)}\t{pct_text}"
+                )
         elif args.cmd == "export":
             rows = db.list_expenses(conn, args.category)
             text = expenses_to_csv(rows)

@@ -65,3 +65,30 @@ def budget_status(
         if e.spent_on.strftime("%Y-%m") == month:
             spent[e.category] += e.amount_cents
     return [(cat, spent[cat], budgets[cat], budgets[cat] - spent[cat]) for cat in sorted(budgets)]
+
+
+def compare_months(
+    expenses: list[Expense], month: str, previous: str
+) -> list[tuple[str, int, int]]:
+    """(category, month total, previous total) for categories with spending in either month."""
+    current_totals: dict[str, int] = defaultdict(int)
+    previous_totals: dict[str, int] = defaultdict(int)
+    for e in expenses:
+        spent_in = e.spent_on.strftime("%Y-%m")
+        if spent_in == month:
+            current_totals[e.category] += e.amount_cents
+        elif spent_in == previous:
+            previous_totals[e.category] += e.amount_cents
+    categories = sorted(current_totals.keys() | previous_totals.keys())
+    return [(cat, current_totals[cat], previous_totals[cat]) for cat in categories]
+
+
+def change_percent(current: int, previous: int) -> int | None:
+    """Whole-number percent change from `previous` to `current`; None when previous is 0."""
+    if previous == 0:
+        return None
+    # Half away from zero: round the magnitude with integer half-up, since `//` on a negative
+    # floors toward -inf and round() is banker's rounding.
+    diff = current - previous
+    magnitude = (200 * abs(diff) + previous) // (2 * previous)
+    return -magnitude if diff < 0 else magnitude

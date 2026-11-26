@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from ledger.money import format_cents, format_cents_grouped, parse_amount
+from ledger.money import format_cents, format_cents_grouped, format_signed_cents, parse_amount
 
 
 @pytest.mark.parametrize(
@@ -86,3 +86,11 @@ def test_format_puts_minus_before_negative_amounts(cents: int, text: str) -> Non
 )
 def test_format_grouped_inserts_thousands_separators(cents: int, text: str) -> None:
     assert format_cents_grouped(cents) == text
+
+
+@pytest.mark.parametrize(
+    "cents,text",
+    [(750, "+7.50"), (0, "+0.00"), (-250, "-2.50"), (-99, "-0.99"), (123450, "+1234.50")],
+)
+def test_format_signed_cents_always_has_a_sign(cents: int, text: str) -> None:
+    assert format_signed_cents(cents) == text

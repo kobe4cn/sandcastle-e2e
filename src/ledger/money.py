@@ -42,6 +42,12 @@ def format_cents(cents: int) -> str:
     return f"{sign}{magnitude // 100}.{magnitude % 100:02d}"
 
 
+def format_signed_cents(cents: int) -> str:
+    """Format cents like `format_cents`, always signed; zero is "+0.00"."""
+    sign = "-" if cents < 0 else "+"
+    return f"{sign}{format_cents(abs(cents))}"
+
+
 def format_cents_grouped(cents: int) -> str:
     """Format cents like `format_cents`, with thousands separators (123450 -> "1,234.50")."""
     # Same sign-first approach as `format_cents`, so -99 stays "-0.99".

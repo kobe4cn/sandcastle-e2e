@@ -9,3 +9,4 @@
 - Print "no budgets set" from `ledger status` when no budgets exist (#104)
 - Print "no categories" when `ledger categories` has nothing to show (#107)
 - Add `ledger export` (#110)
+- Add `ledger compare` for month-over-month spending per category (#111)
