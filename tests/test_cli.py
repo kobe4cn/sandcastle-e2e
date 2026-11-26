@@ -81,6 +81,23 @@ def test_budget_rm(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert capsys.readouterr().out == ""
 
 
+def test_budget_list_json_prints_object_sorted_by_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["budget", "set", "travel", "50"]) == 0
+    assert main(["budget", "set", "Food", "200"]) == 0
+    capsys.readouterr()
+    assert main(["budget", "list", "--json"]) == 0
+    assert capsys.readouterr().out == '{"food": "200.00", "travel": "50.00"}\n'
+
+
+def test_budget_list_json_empty_prints_empty_object(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["budget", "list", "--json"]) == 0
+    assert capsys.readouterr().out == "{}\n"
+
+
 def test_report_average_sorted_by_category(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

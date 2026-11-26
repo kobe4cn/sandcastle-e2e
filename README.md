@@ -17,6 +17,7 @@ uv run ledger report --average   # average spend per expense, by category
 uv run ledger report --category food   # only one category; combines with --average
 uv run ledger budget set food 300   # monthly budget for a category
 uv run ledger budget list
+uv run ledger budget list --json   # same, as a JSON object, e.g. {"food": "100.00"}
 uv run ledger budget rm food
 uv run ledger status --month 2026-01   # spent / budget / remaining per budgeted category; default: current month
 uv run ledger categories   # distinct expense categories, sorted
