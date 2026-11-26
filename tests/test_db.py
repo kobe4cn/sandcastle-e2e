@@ -55,6 +55,30 @@ def test_rejects_long_note(conn: sqlite3.Connection) -> None:
     assert db.count_expenses(conn) == 0
 
 
+def test_add_expenses_inserts_batch_in_order(conn: sqlite3.Connection) -> None:
+    n = db.add_expenses(
+        conn,
+        [(date(2026, 1, 2), " Food ", 1250, "lunch"), (date(2026, 1, 2), "travel", 300, "")],
+    )
+    assert n == 2
+    rows = db.list_expenses(conn)
+    assert [(r.category, r.amount_cents, r.note) for r in rows] == [
+        ("food", 1250, "lunch"),
+        ("travel", 300, ""),
+    ]
+
+
+def test_add_expenses_rolls_back_whole_batch_on_bad_row(conn: sqlite3.Connection) -> None:
+    rows = [
+        (date(2026, 1, 1), "food", 100, ""),
+        (date(2026, 1, 2), "food", 100, "x" * 201),
+        (date(2026, 1, 3), "food", 100, ""),
+    ]
+    with pytest.raises(ValueError, match="note must be at most 200 characters"):
+        db.add_expenses(conn, rows)
+    assert db.count_expenses(conn) == 0
+
+
 def test_delete(conn: sqlite3.Connection) -> None:
     i = db.add_expense(conn, date(2026, 1, 1), "food", 100)
     assert db.delete_expense(conn, i) is True

@@ -1,4 +1,4 @@
-"""Command line: ledger add | list | report | delete | budget | status | categories | count | export | compare."""
+"""Command line: ledger add | list | report | delete | budget | status | categories | count | export | import | compare."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import sys
 from datetime import date, datetime, timedelta
 
 from ledger import __version__, db
-from ledger.export import expenses_to_csv
+from ledger.export import expenses_to_csv, parse_csv
 from ledger.money import format_cents, format_signed_cents, parse_amount
 from ledger.report import (
     average_by_category,
@@ -123,6 +123,12 @@ def build_parser() -> argparse.ArgumentParser:
     export = sub.add_parser("export", help="write expenses as CSV")
     export.add_argument("--category")
     export.add_argument("--output", metavar="PATH", help="write to a file instead of stdout")
+
+    imp = sub.add_parser("import", help="add expenses from a CSV written by ledger export")
+    imp.add_argument("path", metavar="PATH")
+    imp.add_argument(
+        "--dry-run", action="store_true", help="validate the file without adding anything"
+    )
     return p
 
 
@@ -284,6 +290,28 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"error: {e}", file=sys.stderr)
                     return 1
                 print(f"exported {len(rows)} expenses to {args.output}")
+        elif args.cmd == "import":
+            try:
+                with open(args.path, newline="", encoding="utf-8") as f:
+                    text = f.read()
+            except FileNotFoundError:
+                print(f"error: no such file: {args.path}", file=sys.stderr)
+                return 1
+            except OSError as e:
+                print(f"error: {e}", file=sys.stderr)
+                return 1
+            except UnicodeDecodeError:
+                print(f"error: not a UTF-8 file: {args.path}", file=sys.stderr)
+                return 2
+            try:
+                parsed = parse_csv(text)
+            except ValueError as e:
+                print(f"error: {e}", file=sys.stderr)
+                return 2
+            if args.dry_run:
+                print(f"would import {len(parsed)} expenses")
+            else:
+                print(f"imported {db.add_expenses(conn, parsed)} expenses")
         return 0
     finally:
         conn.close()

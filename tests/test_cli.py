@@ -815,3 +815,75 @@ def test_compare_defaults_to_current_month(
     capsys.readouterr()
     assert main(["compare"]) == 0
     assert capsys.readouterr().out.splitlines() == ["food\t4.00\t0.00\t+4.00\tn/a"]
+
+
+def _list_without_ids(capsys: pytest.CaptureFixture[str]) -> list[str]:
+    assert main(["list"]) == 0
+    return [line.split("\t", 1)[1] for line in capsys.readouterr().out.splitlines()]
+
+
+def test_import_round_trips_export_into_empty_database(
+    ledger_db: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["add", "3", "travel", "--on", "2026-01-03"]) == 0
+    assert main(["add", "12.50", "food", "--on", "2026-01-02", "--note", "lunch, late"]) == 0
+    assert main(["add", "4", "food", "--on", "2026-01-02", "--note", "coffee"]) == 0
+    capsys.readouterr()
+    before = _list_without_ids(capsys)
+    path = tmp_path / "out.csv"
+    assert main(["export", "--output", str(path)]) == 0
+    monkeypatch.setenv("LEDGER_DB", str(tmp_path / "fresh.db"))
+    capsys.readouterr()
+    assert main(["import", str(path)]) == 0
+    assert capsys.readouterr().out == "imported 3 expenses\n"
+    assert _list_without_ids(capsys) == before
+
+
+def test_import_with_bad_row_imports_nothing(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "in.csv"
+    path.write_text(
+        "id,date,category,amount,note\n1,2026-01-02,food,1.00,\n2,2026-01-03,food,abc,\n",
+        encoding="utf-8",
+    )
+    assert main(["import", str(path)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "error: line 3: not a number: 'abc'\n"
+    assert main(["count"]) == 0
+    assert capsys.readouterr().out == "0\n"
+
+
+def test_import_missing_file(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "nope.csv"
+    assert main(["import", str(path)]) == 1
+    assert capsys.readouterr().err == f"error: no such file: {path}\n"
+
+
+def test_import_dry_run_changes_nothing(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "in.csv"
+    path.write_text(
+        "id,date,category,amount,note\n1,2026-01-02,food,1.00,\n2,2026-01-03,rent,9,\n",
+        encoding="utf-8",
+    )
+    assert main(["import", "--dry-run", str(path)]) == 0
+    assert capsys.readouterr().out == "would import 2 expenses\n"
+    assert main(["count"]) == 0
+    assert capsys.readouterr().out == "0\n"
+
+
+def test_import_rejects_non_utf8_file(
+    ledger_db: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "in.csv"
+    path.write_bytes(b"id,date,category,amount,note\n1,2026-01-02,caf\xe9,1.00,\n")
+    assert main(["import", str(path)]) == 2
+    assert capsys.readouterr().err == f"error: not a UTF-8 file: {path}\n"

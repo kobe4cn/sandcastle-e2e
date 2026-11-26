@@ -32,6 +32,8 @@ uv run ledger count --month 2026-01   # only expenses in that month; combines wi
 uv run ledger count --json   # same, as a JSON object, e.g. {"count": 3}; combines with --category and --month
 uv run ledger export   # all expenses as CSV (id,date,category,amount,note) on stdout
 uv run ledger export --output out.csv --category food   # write to a file; prints "exported N expenses to PATH"
+uv run ledger import out.csv   # add expenses from an export CSV (ids ignored); all or nothing, prints "imported N expenses"
+uv run ledger import out.csv --dry-run   # validate only; prints "would import N expenses", or "error: line N: ..." for the first bad row
 uv run ledger compare --month 2026-03   # per-category change vs the previous month; default: current month
 uv run ledger --version   # or: uv run ledger -V
 ```

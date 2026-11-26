@@ -11,3 +11,4 @@
 - Add `ledger export` (#110)
 - Add `ledger compare` for month-over-month spending per category (#111)
 - Sort `ledger budget list` (and `--json`) by category name (#114)
+- Add `ledger import` to load expenses from an export CSV (#115)
