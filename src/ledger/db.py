@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 
@@ -68,6 +69,26 @@ def add_expense(
     conn.commit()
     assert cur.lastrowid is not None
     return cur.lastrowid
+
+
+def add_expenses(
+    conn: sqlite3.Connection, rows: Iterable[tuple[date, str, int, str]]
+) -> int:
+    """All or nothing: one transaction, so a bad row rolls back the rows inserted before it."""
+    n = 0
+    with conn:
+        for spent_on, category, amount_cents, note in rows:
+            conn.execute(
+                "INSERT INTO expenses (spent_on, category, amount_cents, note) VALUES (?, ?, ?, ?)",
+                (
+                    spent_on.isoformat(),
+                    _validated_category(category, amount_cents),
+                    amount_cents,
+                    _validated_note(note),
+                ),
+            )
+            n += 1
+    return n
 
 
 def _category_filter(category: str | None) -> tuple[str, tuple[str, ...]]:
