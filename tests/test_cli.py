@@ -24,6 +24,24 @@ def test_add_rejects_bad_amount(ledger_db: Path, capsys: pytest.CaptureFixture[s
     assert "not a number" in capsys.readouterr().err
 
 
+def test_add_accepts_note_of_200_characters(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "1", "food", "--on", "2026-01-02", "--note", "x" * 200]) == 0
+    capsys.readouterr()
+    assert main(["list"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["1\t2026-01-02\tfood\t1.00\t" + "x" * 200]
+
+
+def test_add_rejects_note_longer_than_200_characters(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "1", "food", "--on", "2026-01-02", "--note", "x" * 201]) == 2
+    assert capsys.readouterr().err == "error: note must be at most 200 characters\n"
+    assert main(["count"]) == 0
+    assert capsys.readouterr().out == "0\n"
+
+
 def test_add_accepts_leading_dollar_sign(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

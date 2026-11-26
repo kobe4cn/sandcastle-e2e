@@ -44,6 +44,17 @@ def test_rejects_invalid(conn: sqlite3.Connection, amount: int, category: str) -
         db.add_expense(conn, date(2026, 1, 1), category, amount)
 
 
+def test_accepts_note_of_200_characters(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100, "x" * 200)
+    assert [e.note for e in db.list_expenses(conn)] == ["x" * 200]
+
+
+def test_rejects_long_note(conn: sqlite3.Connection) -> None:
+    with pytest.raises(ValueError, match="note must be at most 200 characters"):
+        db.add_expense(conn, date(2026, 1, 1), "food", 100, "x" * 201)
+    assert db.count_expenses(conn) == 0
+
+
 def test_delete(conn: sqlite3.Connection) -> None:
     i = db.add_expense(conn, date(2026, 1, 1), "food", 100)
     assert db.delete_expense(conn, i) is True
