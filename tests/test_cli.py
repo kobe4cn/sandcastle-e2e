@@ -191,3 +191,27 @@ def test_count_with_category_counts_only_that_category(
     capsys.readouterr()
     assert main(["count", "--category", "FOOD"]) == 0
     assert capsys.readouterr().out.splitlines() == ["2"]
+
+
+def test_list_limit_prints_first_n(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["add", "1", "food", "--on", "2026-01-03"]) == 0
+    assert main(["add", "2", "food", "--on", "2026-01-01"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--limit", "2"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "2\t2026-01-01\tfood\t2.00\t",
+        "3\t2026-01-02\ttravel\t3.00\t",
+    ]
+    assert main(["list"]) == 0
+    assert len(capsys.readouterr().out.splitlines()) == 3
+
+
+@pytest.mark.parametrize("limit_args", [["--limit", "0"], ["--limit=-1"]])
+def test_list_rejects_non_positive_limit(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str], limit_args: list[str]
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["list", *limit_args])
+    assert exc.value.code == 2
+    assert "invalid limit" in capsys.readouterr().err
