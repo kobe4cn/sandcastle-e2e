@@ -84,6 +84,17 @@ def test_budget_set_and_list(ledger_db: Path, capsys: pytest.CaptureFixture[str]
     assert capsys.readouterr().out.splitlines() == ["food\t300.00", "travel\t50.00"]
 
 
+@pytest.mark.parametrize(
+    ("category", "amount", "line"),
+    [("food", "300", "budget for food set to 300.00"), (" Food ", "12.5", "budget for food set to 12.50")],
+)
+def test_budget_set_prints_confirmation(
+    category: str, amount: str, line: str, ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["budget", "set", category, amount]) == 0
+    assert capsys.readouterr().out == line + "\n"
+
+
 def test_budget_list_empty_prints_hint(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -98,7 +109,9 @@ def test_budget_set_rejects_bad_amount(
     amount: str, ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert main(["budget", "set", "food", amount]) == 2
-    assert capsys.readouterr().err.startswith("error: ")
+    captured = capsys.readouterr()
+    assert captured.err.startswith("error: ")
+    assert captured.out == ""
     assert main(["budget", "list"]) == 0
     assert capsys.readouterr().out == "no budgets set\n"
 
