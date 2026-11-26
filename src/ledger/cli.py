@@ -76,6 +76,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--average", action="store_true", help="average spend per expense, per category"
     )
     report.add_argument("--category", help="only report this category")
+    report.add_argument("--json", action="store_true", help="print totals as a JSON object")
 
     rm = sub.add_parser("delete", help="delete an expense by id")
     rm.add_argument("id", type=int)
@@ -142,11 +143,12 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
             rows = list(db.list_expenses(conn, args.category))
-            if args.average:
-                for cat, avg in average_by_category(rows).items():
-                    print(f"{cat}\t{format_cents(avg)}")
+            data = average_by_category(rows) if args.average else totals_by_category(rows)
+            if args.json:
+                amounts = {cat: format_cents(cents) for cat, cents in data.items()}
+                print(json.dumps(amounts, ensure_ascii=False))
             else:
-                for cat, cents in totals_by_category(rows).items():
+                for cat, cents in data.items():
                     print(f"{cat}\t{format_cents(cents)}")
         elif args.cmd == "delete":
             if not db.delete_expense(conn, args.id):

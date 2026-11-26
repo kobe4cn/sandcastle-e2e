@@ -156,6 +156,45 @@ def test_report_average_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str
     assert capsys.readouterr().out == ""
 
 
+def test_report_json_prints_object_in_table_order(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "30", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "2.50", "food", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--json"]) == 0
+    assert capsys.readouterr().out == '{"travel": "30.00", "food": "12.50"}\n'
+
+
+def test_report_json_respects_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--json", "--category", "FOOD"]) == 0
+    assert capsys.readouterr().out == '{"food": "10.00"}\n'
+
+
+def test_report_json_respects_average(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20.00", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--json", "--average"]) == 0
+    assert capsys.readouterr().out == '{"food": "15.00", "travel": "3.00"}\n'
+
+
+def test_report_json_empty_prints_empty_object(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["report", "--json"]) == 0
+    assert capsys.readouterr().out == "{}\n"
+
+
 def test_status_shows_spent_budget_and_negative_remaining(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
