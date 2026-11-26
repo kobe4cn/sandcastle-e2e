@@ -1,6 +1,5 @@
 # Open questions
 
-- [intent] The "Stop and ask" red line only names the `expenses` table, but `SCHEMA` also has a `budgets` table with no migration path either: does changing `budgets` columns/constraints also require stopping? → PROJECT.md「Stop and ask」
 - [intent] PROJECT.md's Overview doesn't mention budgets / `status` at all: what is a "budget" in this domain (strictly monthly? per category only? may `remaining` go negative and how should overspend be shown)? → GLOSSARY.md
 - [intent] The project has no glossary for core terms (expense, category, budget, spent / remaining, month as `YYYY-MM`) → GLOSSARY.md
 - [intent] What currency are the "cents" in, and is there an upper bound on a single amount or budget that the tool should reject? → PROJECT.md「Coding standards」

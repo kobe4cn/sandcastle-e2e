@@ -51,7 +51,7 @@
 
 ## 必须停下
 
-- 需要修改已有 `expenses` 表的列或约束（`db.py` 的 `SCHEMA`）：项目没有迁移机制，`CREATE TABLE IF NOT EXISTS` 不会改动用户已有的 `ledger.db`。只新增独立的新表可以继续做。
+- 需要修改已有的 `expenses` 或 `budgets` 表（`db.py` 的 `SCHEMA`），包括改列、改约束或删表：项目没有迁移机制，`CREATE TABLE IF NOT EXISTS` 不会改动用户已有的 `ledger.db`。只新增独立的新表可以继续做。
 - 需要引入运行时第三方依赖（`[project] dependencies` 目前为空）。
 
 ## 合并冲突
