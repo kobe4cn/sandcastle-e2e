@@ -87,6 +87,28 @@ Categories without a budget are not listed. Without `--month` it reports the cur
 prints an array of objects with `category`, `spent` and `budget` only (no remaining). A
 malformed month such as `--month 2026-13` is a usage error (exit status 2).
 
+## Spending share by category
+
+`ledger report --share` prints each category's percentage of total spending over all recorded
+expenses, one tab-separated `<category> <percent>` line per category with one decimal place,
+largest first (ties sorted by category name). It cannot be combined with `--average`; with
+`--category` the single category is always 100.0%:
+
+```bash
+uv run ledger add 50 rent --on 2026-01-01
+uv run ledger add 12.50 food --on 2026-01-02
+uv run ledger add 25 food --on 2026-01-03
+uv run ledger add 12.50 coffee --on 2026-01-03
+uv run ledger report --share
+# rent	50.0%
+# food	37.5%
+# coffee	12.5%
+uv run ledger report --share --category food
+# food	100.0%
+```
+
+Percentages are rounded to one decimal place, so they do not always add up to exactly 100.0%.
+
 ## Development
 
 - Tests: `uv run pytest`
