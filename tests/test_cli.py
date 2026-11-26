@@ -571,3 +571,25 @@ def test_list_json_empty_prints_empty_array(
 ) -> None:
     assert main(["list", "--json"]) == 0
     assert capsys.readouterr().out == "[]\n"
+
+
+def test_count_json_combines_with_category_and_month(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "3", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "4", "food", "--on", "2026-02-02"]) == 0
+    assert main(["add", "5", "rent", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["count", "--json"]) == 0
+    assert capsys.readouterr().out == '{"count": 3}\n'
+    assert main(["count", "--json", "--category", "food", "--month", "2026-01"]) == 0
+    assert capsys.readouterr().out == '{"count": 1}\n'
+
+
+def test_count_json_unknown_category_prints_zero(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "3", "food", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["count", "--json", "--category", "nope"]) == 0
+    assert capsys.readouterr().out == '{"count": 0}\n'
