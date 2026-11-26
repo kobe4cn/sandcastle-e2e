@@ -397,3 +397,32 @@ def test_list_rejects_invalid_max(
         main(["list", *max_args])
     assert exc.value.code == 2
     assert "invalid amount" in capsys.readouterr().err
+
+
+def test_list_json_prints_expenses_as_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02", "--note", "lunch"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--json"]) == 0
+    assert capsys.readouterr().out == (
+        '[{"id": 1, "date": "2026-01-02", "amount": "12.50", "category": "food", '
+        '"note": "lunch"}]\n'
+    )
+
+
+def test_list_json_respects_category_and_limit(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_three_out_of_order(capsys)
+    assert main(["list", "--json", "--category", "food", "--limit", "1"]) == 0
+    assert capsys.readouterr().out == (
+        '[{"id": 2, "date": "2026-01-01", "amount": "2.00", "category": "food", "note": ""}]\n'
+    )
+
+
+def test_list_json_empty_prints_empty_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["list", "--json"]) == 0
+    assert capsys.readouterr().out == "[]\n"
