@@ -105,6 +105,20 @@ def delete_expense(conn: sqlite3.Connection, expense_id: int) -> bool:
     return cur.rowcount > 0
 
 
+def rename_category(conn: sqlite3.Connection, old: str, new: str) -> int:
+    """Only touches expenses; budgets keep their category (renaming them can hit the PK)."""
+    old = old.strip().lower()
+    new = new.strip().lower()
+    if not new:
+        raise ValueError("category is required")
+    # rowcount counts matched rows, so a no-op rename would otherwise report changes.
+    if not old or old == new:
+        return 0
+    cur = conn.execute("UPDATE expenses SET category = ? WHERE category = ?", (new, old))
+    conn.commit()
+    return cur.rowcount
+
+
 def set_budget(conn: sqlite3.Connection, category: str, amount_cents: int) -> None:
     category = _validated_category(category, amount_cents)
     conn.execute(
