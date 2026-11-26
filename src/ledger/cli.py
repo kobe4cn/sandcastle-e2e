@@ -178,6 +178,8 @@ def main(argv: list[str] | None = None) -> int:
                 if args.json:
                     amounts = {cat: format_cents(cents) for cat, cents in budgets.items()}
                     print(json.dumps(amounts, ensure_ascii=False))
+                elif not budgets:
+                    print("no budgets set")
                 else:
                     for cat, cents in budgets.items():
                         print(f"{cat}\t{format_cents(cents)}")
