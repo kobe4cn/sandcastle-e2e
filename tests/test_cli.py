@@ -166,3 +166,28 @@ def test_categories_distinct_sorted(ledger_db: Path, capsys: pytest.CaptureFixtu
 def test_categories_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["categories"]) == 0
     assert capsys.readouterr().out == ""
+
+
+def test_count_empty_prints_zero(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["count"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["0"]
+
+
+def test_count_prints_total_expenses(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "5", "Food", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["count"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["3"]
+
+
+def test_count_with_category_counts_only_that_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "5", "Food", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["count", "--category", "FOOD"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["2"]
