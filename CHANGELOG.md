@@ -10,3 +10,4 @@
 - Print "no categories" when `ledger categories` has nothing to show (#107)
 - Add `ledger export` (#110)
 - Add `ledger compare` for month-over-month spending per category (#111)
+- Sort `ledger budget list` (and `--json`) by category name (#114)
