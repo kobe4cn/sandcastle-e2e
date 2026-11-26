@@ -341,6 +341,47 @@ def test_count_with_category_counts_only_that_category(
     assert capsys.readouterr().out.splitlines() == ["2"]
 
 
+def _add_across_months() -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-01-31"]) == 0
+    assert main(["add", "5", "food", "--on", "2026-02-01"]) == 0
+    assert main(["add", "7", "food", "--on", "2025-01-15"]) == 0
+
+
+def test_count_with_month_counts_only_that_month(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_across_months()
+    capsys.readouterr()
+    assert main(["count", "--month", "2026-01"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["2"]
+
+
+def test_count_with_month_and_category_combines_filters(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_across_months()
+    capsys.readouterr()
+    assert main(["count", "--month", "2026-01", "--category", "Food"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["1"]
+
+
+def test_count_month_does_not_match_same_month_of_other_year(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _add_across_months()
+    capsys.readouterr()
+    assert main(["count", "--month", "2025-1"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["1"]
+
+
+def test_count_rejects_invalid_month(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["count", "--month", "2026-13"])
+    assert exc.value.code == 2
+    assert "invalid month" in capsys.readouterr().err
+
+
 def test_list_limit_prints_first_n(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["add", "1", "food", "--on", "2026-01-03"]) == 0
     assert main(["add", "2", "food", "--on", "2026-01-01"]) == 0
