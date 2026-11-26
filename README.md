@@ -46,6 +46,47 @@ If no expense has that id, nothing is deleted: the command prints `error: no exp
 (e.g. `error: no expense #9`) to stderr and exits with status 1. A non-integer id is a usage
 error (exit status 2). Ids are never reused, so a deleted id stays unused.
 
+## Budgets
+
+Each category can have one monthly budget. Note the argument order of `budget set`: category
+first, then amount (the reverse of `ledger add`). `ledger status` compares a month's spending
+with the budgets:
+
+```bash
+uv run ledger add 12.50 food --on 2026-01-02
+# Added #1
+uv run ledger budget set food 10
+uv run ledger budget set travel 50
+uv run ledger budget list
+# food	10.00
+# travel	50.00
+uv run ledger budget list --json
+# {"food": "10.00", "travel": "50.00"}
+uv run ledger status --month 2026-01
+# food	12.50	10.00	-2.50
+# travel	0.00	50.00	50.00
+uv run ledger status --month 2026-01 --json
+# [{"category": "food", "spent": "12.50", "budget": "10.00"}, {"category": "travel", "spent": "0.00", "budget": "50.00"}]
+uv run ledger budget rm travel
+# removed budget for travel
+```
+
+`budget set` prints nothing on success. Setting a category again replaces its budget, and
+categories are stored trimmed and lowercased (`Food` and `food` are the same budget). An invalid
+amount prints e.g. `error: amount must be positive` to stderr and exits with status 2.
+
+`budget list` prints one tab-separated `<category> <amount>` line per budget, sorted by
+category, and nothing when there are no budgets (`--json` then prints `{}`).
+
+`budget rm` on a category without a budget prints `error: no budget for <category>` to stderr
+and exits with status 1.
+
+`status` prints tab-separated `<category> <spent> <budget> <remaining>` lines, one per
+budgeted category, with no header; remaining is negative when the category is over budget.
+Categories without a budget are not listed. Without `--month` it reports the current month. `--json`
+prints an array of objects with `category`, `spent` and `budget` only (no remaining). A
+malformed month such as `--month 2026-13` is a usage error (exit status 2).
+
 ## Development
 
 - Tests: `uv run pytest`
