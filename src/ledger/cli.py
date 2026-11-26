@@ -20,6 +20,16 @@ def _month(text: str) -> str:
     return dt.strftime("%Y-%m")
 
 
+def _positive_int(text: str) -> int:
+    try:
+        n = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid limit {text!r}, expected an integer") from None
+    if n <= 0:
+        raise argparse.ArgumentTypeError(f"invalid limit {text!r}, must be at least 1")
+    return n
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledger")
     p.add_argument("-V", "--version", action="version", version=f"%(prog)s {version('ledger')}")
@@ -33,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     ls = sub.add_parser("list", help="list expenses")
     ls.add_argument("--category")
+    ls.add_argument("--limit", type=_positive_int, default=None, help="show at most N expenses")
 
     report = sub.add_parser("report", help="totals by category")
     report.add_argument(
@@ -74,7 +85,10 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             print(f"added #{new_id}")
         elif args.cmd == "list":
-            for row in db.list_expenses(conn, args.category):
+            expenses = db.list_expenses(conn, args.category)
+            if args.limit is not None:
+                expenses = expenses[: args.limit]
+            for row in expenses:
                 print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
             if args.average:
