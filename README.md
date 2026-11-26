@@ -8,6 +8,7 @@ uv run ledger add 12.50 food --note lunch
 uv run ledger add '$12.50' food   # leading $ is accepted; single quotes stop the shell expanding $1
 uv run ledger list
 uv run ledger list --limit 2   # at most 2 expenses, oldest first
+uv run ledger list --reverse   # newest first; combines with --category and --limit
 uv run ledger delete 3   # delete an expense by id (ids come from ledger list)
 uv run ledger report
 uv run ledger report --average   # average spend per expense, by category
