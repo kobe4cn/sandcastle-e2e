@@ -57,6 +57,15 @@ def test_delete_missing(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> 
     assert "no expense #9" in capsys.readouterr().err
 
 
+def test_delete_prints_success_line(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["delete", "1"]) == 0
+    assert capsys.readouterr().out == "Deleted expense #1\n"
+
+
 @pytest.mark.parametrize("flag", ["--version", "-V"])
 def test_version(flag: str, ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
