@@ -159,7 +159,9 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
             rows = list(db.list_expenses(conn, args.category))
-            if args.average:
+            if not rows:
+                print("no expenses")
+            elif args.average:
                 for cat, avg in average_by_category(rows).items():
                     print(f"{cat}\t{format_cents(avg)}")
             elif args.share:

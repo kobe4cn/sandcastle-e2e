@@ -210,13 +210,13 @@ def test_report_category_with_average_prints_only_that_category(
     assert capsys.readouterr().out.splitlines() == ["food\t15.00"]
 
 
-def test_report_unknown_category_prints_nothing(
+def test_report_unknown_category_prints_no_expenses(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert main(["add", "10.00", "food", "--on", "2026-01-02"]) == 0
     capsys.readouterr()
     assert main(["report", "--category", "rent"]) == 0
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == "no expenses\n"
 
 
 def test_report_average_rounds_half_up(
@@ -229,9 +229,9 @@ def test_report_average_rounds_half_up(
     assert capsys.readouterr().out.splitlines() == ["food\t1.01"]
 
 
-def test_report_average_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_report_average_empty_prints_no_expenses(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["report", "--average"]) == 0
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == "no expenses\n"
 
 
 def test_report_share_prints_percentage_per_category(
@@ -244,11 +244,18 @@ def test_report_share_prints_percentage_per_category(
     assert capsys.readouterr().out.splitlines() == ["food\t62.5%", "rent\t37.5%"]
 
 
-def test_report_share_empty_prints_nothing(
+def test_report_share_empty_prints_no_expenses(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert main(["report", "--share"]) == 0
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().out == "no expenses\n"
+
+
+def test_report_empty_database_prints_no_expenses(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["report"]) == 0
+    assert capsys.readouterr().out == "no expenses\n"
 
 
 def test_report_share_with_category_is_whole_share(
