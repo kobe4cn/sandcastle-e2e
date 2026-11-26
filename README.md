@@ -11,6 +11,7 @@ uv run ledger list --limit 2   # at most 2 expenses, oldest first
 uv run ledger delete 3   # delete an expense by id (ids come from ledger list)
 uv run ledger report
 uv run ledger report --average   # average spend per expense, by category
+uv run ledger report --month 2026-01   # only expenses from one month; also works with --average
 uv run ledger budget set food 300   # monthly budget for a category
 uv run ledger budget list
 uv run ledger budget rm food

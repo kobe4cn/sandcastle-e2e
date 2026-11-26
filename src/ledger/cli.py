@@ -49,6 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument(
         "--average", action="store_true", help="average spend per expense by category"
     )
+    report.add_argument("--month", type=_month, default=None, help="YYYY-MM")
 
     rm = sub.add_parser("delete", help="delete an expense by id")
     rm.add_argument("id", type=int)
@@ -91,11 +92,14 @@ def main(argv: list[str] | None = None) -> int:
             for row in expenses:
                 print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
+            expenses = db.list_expenses(conn)
+            if args.month is not None:
+                expenses = [e for e in expenses if e.spent_on.strftime("%Y-%m") == args.month]
             if args.average:
-                for cat, avg in average_by_category(db.list_expenses(conn)).items():
+                for cat, avg in average_by_category(expenses).items():
                     print(f"{cat}\t{format_cents(avg)}")
             else:
-                for cat, cents in totals_by_category(db.list_expenses(conn)).items():
+                for cat, cents in totals_by_category(expenses).items():
                     print(f"{cat}\t{format_cents(cents)}")
         elif args.cmd == "delete":
             if not db.delete_expense(conn, args.id):

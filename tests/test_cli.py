@@ -215,3 +215,34 @@ def test_list_rejects_non_positive_limit(
         main(["list", *limit_args])
     assert exc.value.code == 2
     assert "invalid limit" in capsys.readouterr().err
+
+
+def test_report_month_shows_only_that_month(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "99", "food", "--on", "2026-02-01"]) == 0
+    assert main(["add", "3", "travel", "--on", "2026-02-03"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--month", "2026-01"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t12.50"]
+    assert main(["report"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t111.50", "travel\t3.00"]
+
+
+def test_report_month_applies_to_average(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "10", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20", "food", "--on", "2026-01-20"]) == 0
+    assert main(["add", "99", "food", "--on", "2026-02-01"]) == 0
+    capsys.readouterr()
+    assert main(["report", "--average", "--month", "2026-01"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["food\t15.00"]
+
+
+def test_report_rejects_invalid_month(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["report", "--month", "2026-13"])
+    assert exc.value.code == 2
+    assert "invalid month" in capsys.readouterr().err
