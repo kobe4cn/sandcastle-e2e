@@ -195,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not db.delete_budget(conn, cat):
                     print(f"error: no budget for {cat}", file=sys.stderr)
                     return 1
-                print(f"removed budget for {cat}")
+                print(f"Removed budget for {cat}")
         elif args.cmd == "status":
             month = args.month or date.today().strftime("%Y-%m")
             statuses = budget_status(db.list_expenses(conn), db.list_budgets(conn), month)

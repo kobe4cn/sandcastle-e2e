@@ -73,7 +73,7 @@ uv run ledger status --month 2026-01
 uv run ledger status --month 2026-01 --json
 # [{"category": "food", "spent": "12.50", "budget": "10.00"}, {"category": "travel", "spent": "0.00", "budget": "50.00"}]
 uv run ledger budget rm travel
-# removed budget for travel
+# Removed budget for travel
 ```
 
 `budget set` prints `budget for <category> set to <amount>` on success. Setting a category again replaces its budget, and
