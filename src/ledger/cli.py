@@ -152,6 +152,8 @@ def main(argv: list[str] | None = None) -> int:
                         ensure_ascii=False,
                     )
                 )
+            elif not expenses:
+                print("no expenses")
             else:
                 for row in expenses:
                     print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")

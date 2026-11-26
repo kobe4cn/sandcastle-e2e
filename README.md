@@ -6,7 +6,7 @@ A tiny personal expense ledger backed by SQLite. Used as the end-to-end test pro
 uv sync
 uv run ledger add 12.50 food --note lunch   # note: at most 200 characters
 uv run ledger add '$12.50' food   # leading $ is accepted; single quotes stop the shell expanding $1
-uv run ledger list
+uv run ledger list   # prints "no expenses" when there are none
 uv run ledger list --limit 2   # at most 2 expenses, oldest first
 uv run ledger list --reverse   # newest first; combines with --category and --limit
 uv run ledger list --min 10   # only expenses of at least 10.00; combines with --category, --reverse and --limit (filters first)

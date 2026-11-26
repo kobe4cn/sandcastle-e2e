@@ -104,6 +104,35 @@ def test_budget_list_empty_prints_hint(
     assert captured.err == ""
 
 
+def test_list_empty_prints_no_expenses(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["list"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == "no expenses\n"
+    assert captured.err == ""
+
+
+def test_list_unmatched_category_prints_no_expenses(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "1.00", "food", "--on", "2026-01-01"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--category", "nope"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == "no expenses\n"
+    assert captured.err == ""
+
+
+def test_list_json_unmatched_category_prints_empty_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "1.00", "food", "--on", "2026-01-01"]) == 0
+    capsys.readouterr()
+    assert main(["list", "--category", "nope", "--json"]) == 0
+    assert capsys.readouterr().out == "[]\n"
+
+
 @pytest.mark.parametrize("amount", ["abc", "0", "1.234"])
 def test_budget_set_rejects_bad_amount(
     amount: str, ledger_db: Path, capsys: pytest.CaptureFixture[str]
