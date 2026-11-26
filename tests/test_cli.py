@@ -200,6 +200,28 @@ def test_status_defaults_to_current_month(
     assert capsys.readouterr().out.splitlines() == ["food\t4.00\t10.00\t6.00"]
 
 
+def test_status_json_prints_month_statuses_as_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "12.50", "food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "99", "food", "--on", "2026-02-01"]) == 0
+    assert main(["budget", "set", "food", "10"]) == 0
+    assert main(["budget", "set", "travel", "50"]) == 0
+    capsys.readouterr()
+    assert main(["status", "--month", "2026-01", "--json"]) == 0
+    assert capsys.readouterr().out == (
+        '[{"category": "food", "spent": "12.50", "budget": "10.00"}, '
+        '{"category": "travel", "spent": "0.00", "budget": "50.00"}]\n'
+    )
+
+
+def test_status_json_without_budgets_prints_empty_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["status", "--month", "2026-01", "--json"]) == 0
+    assert capsys.readouterr().out == "[]\n"
+
+
 def test_categories_distinct_sorted(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
     assert main(["add", "10", "Food", "--on", "2026-01-02"]) == 0

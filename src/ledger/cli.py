@@ -92,6 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     status = sub.add_parser("status", help="spending vs budget per category for a month")
     status.add_argument("--month", type=_month, default=None, help="YYYY-MM, default this month")
+    status.add_argument("--json", action="store_true", help="print status as a JSON array")
 
     cats = sub.add_parser("categories", help="list categories used by expenses")
     cats.add_argument("--json", action="store_true", help="print categories as a JSON array")
@@ -176,10 +177,26 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "status":
             month = args.month or date.today().strftime("%Y-%m")
             statuses = budget_status(db.list_expenses(conn), db.list_budgets(conn), month)
-            for cat, spent, budget, remaining in statuses:
+            if args.json:
                 print(
-                    f"{cat}\t{format_cents(spent)}\t{format_cents(budget)}\t{format_cents(remaining)}"
+                    json.dumps(
+                        [
+                            {
+                                "category": cat,
+                                "spent": format_cents(spent),
+                                "budget": format_cents(budget),
+                            }
+                            for cat, spent, budget, _ in statuses
+                        ],
+                        ensure_ascii=False,
+                    )
                 )
+            else:
+                for cat, spent, budget, remaining in statuses:
+                    print(
+                        f"{cat}\t{format_cents(spent)}\t{format_cents(budget)}\t"
+                        f"{format_cents(remaining)}"
+                    )
         elif args.cmd == "categories":
             categories = db.list_categories(conn)
             if args.json:
