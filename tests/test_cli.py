@@ -246,3 +246,13 @@ def test_list_rejects_non_positive_limit(
         main(["list", *limit_args])
     assert exc.value.code == 2
     assert "invalid limit" in capsys.readouterr().err
+
+
+def test_list_help_describes_category(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("COLUMNS", "200")
+    with pytest.raises(SystemExit) as exc:
+        main(["list", "--help"])
+    assert exc.value.code == 0
+    assert "only show expenses in this category" in capsys.readouterr().out

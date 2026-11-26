@@ -42,7 +42,7 @@ def build_parser() -> argparse.ArgumentParser:
     add.add_argument("--on", type=date.fromisoformat, default=None, help="YYYY-MM-DD")
 
     ls = sub.add_parser("list", help="list expenses")
-    ls.add_argument("--category")
+    ls.add_argument("--category", help="only show expenses in this category")
     ls.add_argument("--limit", type=_positive_int, default=None, help="show at most N expenses")
 
     report = sub.add_parser("report", help="totals by category")
