@@ -84,7 +84,8 @@ def build_parser() -> argparse.ArgumentParser:
     bset = budget_sub.add_parser("set", help="set a category's monthly budget")
     bset.add_argument("category")
     bset.add_argument("amount")
-    budget_sub.add_parser("list", help="list budgets")
+    blist = budget_sub.add_parser("list", help="list budgets")
+    blist.add_argument("--json", action="store_true", help="print budgets as a JSON object")
     brm = budget_sub.add_parser("rm", help="remove a category's budget")
     brm.add_argument("category")
 
@@ -142,8 +143,13 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"error: {e}", file=sys.stderr)
                     return 2
             elif args.budget_cmd == "list":
-                for cat, cents in db.list_budgets(conn).items():
-                    print(f"{cat}\t{format_cents(cents)}")
+                budgets = db.list_budgets(conn)
+                if args.json:
+                    amounts = {cat: format_cents(cents) for cat, cents in budgets.items()}
+                    print(json.dumps(amounts, ensure_ascii=False))
+                else:
+                    for cat, cents in budgets.items():
+                        print(f"{cat}\t{format_cents(cents)}")
             elif args.budget_cmd == "rm":
                 if not db.delete_budget(conn, args.category):
                     print(f"error: no budget for {args.category}", file=sys.stderr)
