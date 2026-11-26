@@ -125,7 +125,7 @@ def test_budget_rm(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["budget", "set", "food", "100"]) == 0
     capsys.readouterr()
     assert main(["budget", "rm", "food"]) == 0
-    assert capsys.readouterr().out == "removed budget for food\n"
+    assert capsys.readouterr().out == "Removed budget for food\n"
     assert main(["budget", "list"]) == 0
     assert capsys.readouterr().out == "no budgets set\n"
 
