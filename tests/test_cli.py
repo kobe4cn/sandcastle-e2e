@@ -199,6 +199,24 @@ def test_categories_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -
     assert capsys.readouterr().out == ""
 
 
+def test_categories_json_prints_sorted_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "3", "travel", "--on", "2026-01-02"]) == 0
+    assert main(["add", "10", "Food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "1.50", "books", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["categories", "--json"]) == 0
+    assert capsys.readouterr().out == '["books", "food", "travel"]\n'
+
+
+def test_categories_json_empty_prints_empty_array(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["categories", "--json"]) == 0
+    assert capsys.readouterr().out == "[]\n"
+
+
 def test_count_empty_prints_zero(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["count"]) == 0
     assert capsys.readouterr().out.splitlines() == ["0"]

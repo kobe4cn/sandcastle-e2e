@@ -20,6 +20,7 @@ uv run ledger budget list
 uv run ledger budget rm food
 uv run ledger status --month 2026-01   # spent / budget / remaining per budgeted category; default: current month
 uv run ledger categories   # distinct expense categories, sorted
+uv run ledger categories --json   # same, as a JSON array, e.g. ["food", "rent"]
 uv run ledger count   # number of recorded expenses
 uv run ledger count --category food   # number of expenses in one category
 uv run ledger --version   # or: uv run ledger -V

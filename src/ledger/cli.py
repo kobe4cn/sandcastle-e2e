@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import date, datetime
 from importlib.metadata import version
@@ -90,7 +91,8 @@ def build_parser() -> argparse.ArgumentParser:
     status = sub.add_parser("status", help="spending vs budget per category for a month")
     status.add_argument("--month", type=_month, default=None, help="YYYY-MM, default this month")
 
-    sub.add_parser("categories", help="list categories used by expenses")
+    cats = sub.add_parser("categories", help="list categories used by expenses")
+    cats.add_argument("--json", action="store_true", help="print categories as a JSON array")
 
     count = sub.add_parser("count", help="number of recorded expenses")
     count.add_argument("--category")
@@ -155,8 +157,12 @@ def main(argv: list[str] | None = None) -> int:
                     f"{cat}\t{format_cents(spent)}\t{format_cents(budget)}\t{format_cents(remaining)}"
                 )
         elif args.cmd == "categories":
-            for cat in db.list_categories(conn):
-                print(cat)
+            categories = db.list_categories(conn)
+            if args.json:
+                print(json.dumps(categories, ensure_ascii=False))
+            else:
+                for cat in categories:
+                    print(cat)
         elif args.cmd == "count":
             print(db.count_expenses(conn, args.category))
         return 0
