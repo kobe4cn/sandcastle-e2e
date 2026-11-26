@@ -8,6 +8,7 @@ from ledger.report import (
     average_by_category,
     budget_status,
     category_share,
+    largest_expense_by_category,
     monthly_totals,
     totals_by_category,
 )
@@ -62,6 +63,20 @@ def test_average_per_category_sorted_by_name(conn: sqlite3.Connection) -> None:
     db.add_expense(conn, date(2026, 2, 1), "food", 200)
     result = average_by_category(db.list_expenses(conn))
     assert result == {"food": 250, "rent": 1000}
+    assert list(result) == ["food", "rent"]
+
+
+def test_largest_of_empty_list_is_empty() -> None:
+    assert largest_expense_by_category([]) == {}
+
+
+def test_largest_is_max_single_expense_sorted_by_name(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "rent", 1000)
+    db.add_expense(conn, date(2026, 1, 2), "food", 300)
+    db.add_expense(conn, date(2026, 1, 3), "food", 750)
+    db.add_expense(conn, date(2026, 2, 1), "food", 200)
+    result = largest_expense_by_category(db.list_expenses(conn))
+    assert result == {"food": 750, "rent": 1000}
     assert list(result) == ["food", "rent"]
 
 
