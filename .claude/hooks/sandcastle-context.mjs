@@ -9,6 +9,16 @@
 //   到 SOFT 时要求收尾：implement 验收标准都做完的照常输出 COMPLETE（不然会多开一次只用来确认的会话，2026-11-25 #1274），
 //   没做完的交接给下一个全新会话（3 次会话做不完退回 prep 拆票）；到 HARD 时要求立刻结束。
 //   同一会话每多 STEP 才再提醒一次，避免每次工具调用都刷屏。
+// .claude/hooks/sandcastle-context.mjs: context budget guard inside the Sandcastle sandbox (installed into projects by sandpipe onboard).
+// Only active when SANDCASTLE_PROFILE is set (the pipeline sets it for claude in the container); host sessions are unaffected.
+// PreToolUse(Read): when the profile sets SANDCASTLE_NO_IMAGES=1 (the main model can't see images, e.g. glm-5.3), the main thread may not read images:
+//   they still cost tokens unseen, about 60–70k for a 1280×720 screenshot, enough to push a session past 150k at once.
+//   Images go to the screenshot-checker subagent (.claude/agents/screenshot-checker.md, model: haiku; profiles can map haiku to a vision model),
+//   each subagent may read only one image, keeping its own context under 150k. Hook input from subagents carries agent_id / agent_type; the main thread's doesn't.
+// PostToolUse(*): estimate context from the latest assistant message in the transcript (input + cache write + cache read) plus the tool result just returned;
+//   at SOFT, ask to wrap up: implement sessions that finished every acceptance criterion still output COMPLETE (otherwise an extra session opens just to confirm, 2026-11-25 #1274),
+//   unfinished work is handed to a fresh session (after 3 sessions it goes back to prep to be split); at HARD, ask to stop immediately.
+//   Within one session, remind again only every STEP more, so not every tool call is flooded.
 import { closeSync, existsSync, openSync, readFileSync, readSync, statSync, writeFileSync } from 'node:fs';
 
 export const SOFT = 100_000;
@@ -16,7 +26,10 @@ export const HARD = 130_000;
 const STEP = 10_000;
 const IMAGE = /\.(png|jpe?g|gif|webp|bmp)$/i;
 
-/** 会话记录尾部最近一条带 usage 的 assistant 消息的上下文大小；读不到返回 0。只读文件末尾，记录可能有几 MB。 */
+/**
+ * 会话记录尾部最近一条带 usage 的 assistant 消息的上下文大小；读不到返回 0。只读文件末尾，记录可能有几 MB。
+ * Context size of the latest assistant message with usage at the end of the transcript; 0 if unreadable. Reads only the tail, since transcripts can be several MB.
+ */
 export function lastContext(transcriptPath, tailBytes = 512 * 1024) {
   if (!transcriptPath || !existsSync(transcriptPath)) return 0;
   const size = statSync(transcriptPath).size;
@@ -42,9 +55,14 @@ export function lastContext(transcriptPath, tailBytes = 512 * 1024) {
   return 0;
 }
 
-/** 刚返回的工具结果大约多少 token：按 3 个字符 1 个 token 粗估（中文偏多时偏保守）。 */
+/**
+ * 刚返回的工具结果大约多少 token：按 3 个字符 1 个 token 粗估（中文偏多时偏保守）。
+ * Rough token count of the tool result just returned: 3 characters per token (conservative for lots of Chinese).
+ */
 // 改文件的工具：hook 收到的 tool_response 带整份原文件（originalFile）和补丁，模型实际只看到一句「已修改」，按 0 算。
 //   不排除的话，改一下 test/CATALOG.md 这种大文件就会被估成 +60k，误报收尾（2026-11-24 #1268 实际 56k 时被报成 116k）。
+// Editing tools: the hook's tool_response carries the whole original file (originalFile) plus the patch, but the model only sees "file edited", so count 0.
+// Otherwise editing a big file like test/CATALOG.md is estimated at +60k and triggers a false wrap-up (2026-11-24 #1268 was 56k but reported as 116k).
 const EDIT_TOOLS = new Set(['Edit', 'MultiEdit', 'Write', 'NotebookEdit']);
 export const resultTokens = (response, toolName) =>
   EDIT_TOOLS.has(toolName) ? 0 : Math.ceil(JSON.stringify(response ?? '').length / 3);
@@ -53,7 +71,10 @@ const k = (n) => `${Math.round(n / 1000)}k`;
 
 export const CHECKER = 'screenshot-checker';
 
-/** 返回要拦下的原因；不用拦返回 undefined。state 记每个看图子代理已经读过的图片。 */
+/**
+ * 返回要拦下的原因；不用拦返回 undefined。state 记每个看图子代理已经读过的图片。
+ * Reason to block, or undefined when not blocked. state records the images each vision subagent has read.
+ */
 export function checkRead(input, env, state = new Map()) {
   if (!env.SANDCASTLE_PROFILE || env.SANDCASTLE_NO_IMAGES !== '1') return undefined;
   const file = String(input.tool_input?.file_path ?? '');
@@ -72,9 +93,12 @@ export function checkRead(input, env, state = new Map()) {
   );
 }
 
-/** 返回给 agent 的收尾要求；还没到预算返回 undefined。state 记这个会话上次在多大时提醒过。 */
+/**
+ * 返回给 agent 的收尾要求；还没到预算返回 undefined。state 记这个会话上次在多大时提醒过。
+ * Wrap-up request for the agent, or undefined when under budget. state records the size at which this session was last reminded.
+ */
 export function checkBudget(input, env, state) {
-  if (!env.SANDCASTLE_PROFILE || input.agent_id) return undefined; // 子代理的上下文另算，它的结论回到主线程时由 Agent 工具的 PostToolUse 计入
+  if (!env.SANDCASTLE_PROFILE || input.agent_id) return undefined; // 子代理的上下文另算，它的结论回到主线程时由 Agent 工具的 PostToolUse 计入 / a subagent's context is counted separately; its result counts toward the main thread via the Agent tool's PostToolUse
   const ctx = lastContext(input.transcript_path) + resultTokens(input.tool_response, input.tool_name);
   if (ctx < SOFT) return undefined;
   const last = state.get(input.session_id) ?? 0;
@@ -86,6 +110,7 @@ export function checkBudget(input, env, state) {
     '还有没做完的：把已经能通过测试的改动提交（提交信息写明完成了哪些验收标准）；在 issue 上留进度评论，写清已完成、未完成、下一步从哪个 file:line 接着做；然后结束会话，**这时不要输出 <promise>COMPLETE</promise>**。下一个全新会话会按这条评论接着做；3 次会话仍做不完，prep 会把剩下的拆成更小的票。';
   const other = '收尾：不再开始新的探索或改动，把手上这一项做完、提交，按提示词的要求输出结论；没来得及看的部分在输出里写明，交给下一轮。';
   // 没有阶段名（编排脚本还是旧进程，没传 SANDCASTLE_PHASE）时两种都给，由 agent 按自己的任务对号入座
+  // Without a phase name (the pipeline is an old process that doesn't pass SANDCASTLE_PHASE), give both, and the agent picks the one matching its task
   const handoff = phase === 'implement' ? impl : phase ? other : `若你在实现一张票（implement）——${impl}若是其他阶段（prep / review / revise / fix / rebase）——${other}`;
   const level = ctx >= HARD ? `已到 ${k(ctx)}，接近 150k 预算上限，立刻` : `已到约 ${k(ctx)}（预算 150k），现在`;
   return `上下文预算：本会话上下文${level}${handoff}之后只读必要的几行（grep -n / sed -n 小范围），不要再整读文件或跑输出很长的命令。`;
