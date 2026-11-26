@@ -95,6 +95,15 @@ def test_budget_set_prints_confirmation(
     assert capsys.readouterr().out == line + "\n"
 
 
+def test_status_without_budgets_prints_hint(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["status", "--month", "2026-01"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == "no budgets set\n"
+    assert captured.err == ""
+
+
 def test_budget_list_empty_prints_hint(
     ledger_db: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

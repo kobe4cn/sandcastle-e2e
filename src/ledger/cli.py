@@ -217,6 +217,8 @@ def main(argv: list[str] | None = None) -> int:
                         ensure_ascii=False,
                     )
                 )
+            elif not statuses:
+                print("no budgets set")
             else:
                 for cat, spent, budget, remaining in statuses:
                     print(

@@ -89,8 +89,8 @@ and exits with status 1.
 `status` prints tab-separated `<category> <spent> <budget> <remaining>` lines, one per
 budgeted category, with no header; remaining is negative when the category is over budget.
 Categories without a budget are not listed. Without `--month` it reports the current month. `--json`
-prints an array of objects with `category`, `spent` and `budget` only (no remaining). A
-malformed month such as `--month 2026-13` is a usage error (exit status 2).
+prints an array of objects with `category`, `spent` and `budget` only (no remaining). When no
+budgets exist it prints `no budgets set` (`--json` still prints `[]`). A malformed month such as `--month 2026-13` is a usage error (exit status 2).
 
 ## Spending share by category
 
