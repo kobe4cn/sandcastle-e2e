@@ -6,9 +6,8 @@ import argparse
 import json
 import sys
 from datetime import date, datetime
-from importlib.metadata import version
 
-from ledger import db
+from ledger import __version__, db
 from ledger.money import format_cents, parse_amount
 from ledger.report import (
     average_by_category,
@@ -45,7 +44,7 @@ def _amount(text: str) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ledger")
-    p.add_argument("-V", "--version", action="version", version=f"%(prog)s {version('ledger')}")
+    p.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     add = sub.add_parser("add", help="record an expense")
