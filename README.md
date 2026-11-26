@@ -25,6 +25,7 @@ uv run ledger status --month 2026-01   # spent / budget / remaining per budgeted
 uv run ledger status --json   # same, as a JSON array of {category, spent, budget}; combines with --month
 uv run ledger categories   # distinct expense categories, sorted
 uv run ledger categories --json   # same, as a JSON array, e.g. ["food", "rent"]
+uv run ledger categories --count   # category and expense count, tab-separated
 uv run ledger count   # number of recorded expenses
 uv run ledger count --category food   # number of expenses in one category
 uv run ledger count --month 2026-01   # only expenses in that month; combines with --category

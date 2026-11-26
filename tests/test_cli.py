@@ -593,3 +593,23 @@ def test_count_json_unknown_category_prints_zero(
     capsys.readouterr()
     assert main(["count", "--json", "--category", "nope"]) == 0
     assert capsys.readouterr().out == '{"count": 0}\n'
+
+
+def test_categories_count(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["add", "10", "Food", "--on", "2026-01-02"]) == 0
+    assert main(["add", "20", "food ", "--on", "2026-01-03"]) == 0
+    assert main(["add", "1.50", "books", "--on", "2026-01-03"]) == 0
+    capsys.readouterr()
+    assert main(["categories", "--count"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["books\t1", "food\t2"]
+
+
+def test_categories_count_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["categories", "--count"]) == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_categories_count_and_json_rejected(ledger_db: Path) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["categories", "--count", "--json"])
+    assert exc.value.code == 2
