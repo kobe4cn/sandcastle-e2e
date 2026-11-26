@@ -102,3 +102,33 @@ def test_list_categories_distinct_sorted(conn: sqlite3.Connection) -> None:
 
 def test_list_categories_empty(conn: sqlite3.Connection) -> None:
     assert db.list_categories(conn) == []
+
+
+def test_rename_category_updates_only_matching_expenses(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 2), "food", 200)
+    travel = db.add_expense(conn, date(2026, 1, 3), "travel", 300)
+    assert db.rename_category(conn, "food", "groceries") == 2
+    assert [r.amount_cents for r in db.list_expenses(conn, "groceries")] == [100, 200]
+    assert [(r.id, r.amount_cents) for r in db.list_expenses(conn, "travel")] == [(travel, 300)]
+    assert db.list_categories(conn) == ["groceries", "travel"]
+
+
+def test_rename_category_without_expenses_returns_zero(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    assert db.rename_category(conn, "books", "reading") == 0
+    assert db.list_categories(conn) == ["food"]
+
+
+def test_rename_category_normalizes_names(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    assert db.rename_category(conn, " Food ", " Groceries ") == 1
+    assert db.list_categories(conn) == ["groceries"]
+
+
+@pytest.mark.parametrize("new", ["", "   "])
+def test_rename_category_rejects_blank_new_name(conn: sqlite3.Connection, new: str) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    with pytest.raises(ValueError):
+        db.rename_category(conn, "food", new)
+    assert db.list_categories(conn) == ["food"]

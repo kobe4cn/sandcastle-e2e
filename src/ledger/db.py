@@ -83,6 +83,19 @@ def delete_expense(conn: sqlite3.Connection, expense_id: int) -> bool:
     return cur.rowcount > 0
 
 
+def rename_category(conn: sqlite3.Connection, old: str, new: str) -> int:
+    """Only expenses are renamed; a budget on the old category is left as is."""
+    old = old.strip().lower()
+    new = new.strip().lower()
+    if not new:
+        raise ValueError("category is required")
+    if not old:
+        return 0
+    cur = conn.execute("UPDATE expenses SET category = ? WHERE category = ?", (new, old))
+    conn.commit()
+    return cur.rowcount
+
+
 def set_budget(conn: sqlite3.Connection, category: str, amount_cents: int) -> None:
     category = _validated_category(category, amount_cents)
     conn.execute(
