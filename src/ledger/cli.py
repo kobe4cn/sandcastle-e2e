@@ -69,6 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="AMOUNT",
         help="only expenses of at most this amount",
     )
+    ls.add_argument("--json", action="store_true", help="print expenses as a JSON array")
 
     report = sub.add_parser("report", help="totals by category")
     report.add_argument(
@@ -120,8 +121,25 @@ def main(argv: list[str] | None = None) -> int:
                 expenses = expenses[::-1]
             if args.limit is not None:
                 expenses = expenses[: args.limit]
-            for row in expenses:
-                print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
+            if args.json:
+                print(
+                    json.dumps(
+                        [
+                            {
+                                "id": e.id,
+                                "date": e.spent_on.isoformat(),
+                                "amount": format_cents(e.amount_cents),
+                                "category": e.category,
+                                "note": e.note,
+                            }
+                            for e in expenses
+                        ],
+                        ensure_ascii=False,
+                    )
+                )
+            else:
+                for row in expenses:
+                    print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
             rows = list(db.list_expenses(conn, args.category))
             if args.average:
