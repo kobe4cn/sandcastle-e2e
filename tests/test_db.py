@@ -131,3 +131,35 @@ def test_count_expenses_filters_by_normalized_category(conn: sqlite3.Connection)
     assert db.count_expenses(conn) == 3
     assert db.count_expenses(conn, " FOOD ") == 2
     assert db.count_expenses(conn, "rent") == 0
+
+
+def test_rename_category_moves_all_expenses_and_returns_count(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 2), "Food", 200)
+    db.add_expense(conn, date(2026, 1, 2), "rent", 300)
+    assert db.rename_category(conn, "Food ", "groceries") == 2
+    assert db.count_expenses(conn, "food") == 0
+    assert db.count_expenses(conn, "groceries") == 2
+    assert db.count_expenses(conn, "rent") == 1
+
+
+def test_rename_category_missing_old_returns_zero_and_changes_nothing(
+    conn: sqlite3.Connection,
+) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    before = db.list_expenses(conn)
+    assert db.rename_category(conn, "travel", "trips") == 0
+    assert db.list_expenses(conn) == before
+
+
+def test_rename_category_to_same_name_returns_zero(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    assert db.rename_category(conn, "food", " FOOD ") == 0
+    assert db.count_expenses(conn, "food") == 1
+
+
+def test_rename_category_rejects_blank_new_name(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    with pytest.raises(ValueError):
+        db.rename_category(conn, "food", "  ")
+    assert db.count_expenses(conn, "food") == 1
