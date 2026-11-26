@@ -67,8 +67,14 @@ def _category_filter(category: str | None) -> tuple[str, tuple[str, ...]]:
     return " WHERE category = ?", (category.strip().lower(),)
 
 
-def list_expenses(conn: sqlite3.Connection, category: str | None = None) -> list[Expense]:
-    where, args = _category_filter(category)
+def list_expenses(
+    conn: sqlite3.Connection, category: str | None = None, *, min_cents: int | None = None
+) -> list[Expense]:
+    where, cat_args = _category_filter(category)
+    args: tuple[str | int, ...] = cat_args
+    if min_cents is not None:
+        where += " AND amount_cents >= ?" if where else " WHERE amount_cents >= ?"
+        args += (min_cents,)
     sql = f"SELECT id, spent_on, category, amount_cents, note FROM expenses{where}"
     sql += " ORDER BY spent_on, id"
     return [
