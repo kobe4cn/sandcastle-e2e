@@ -7,6 +7,7 @@ from ledger import db
 from ledger.report import (
     average_by_category,
     budget_status,
+    category_share,
     monthly_totals,
     totals_by_category,
 )
@@ -17,6 +18,26 @@ def test_totals_sorted_by_amount_desc(conn: sqlite3.Connection) -> None:
     db.add_expense(conn, date(2026, 1, 2), "rent", 1000)
     db.add_expense(conn, date(2026, 2, 1), "food", 200)
     assert totals_by_category(db.list_expenses(conn)) == {"rent": 1000, "food": 500}
+
+
+def test_share_sorted_by_share_desc(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "food", 100)
+    db.add_expense(conn, date(2026, 1, 2), "rent", 200)
+    result = category_share(db.list_expenses(conn))
+    assert result == {"rent": 66.7, "food": 33.3}
+    assert list(result) == ["rent", "food"]
+
+
+def test_share_rounds_half_up(conn: sqlite3.Connection) -> None:
+    db.add_expense(conn, date(2026, 1, 1), "a", 1)
+    db.add_expense(conn, date(2026, 1, 2), "b", 15)
+    result = category_share(db.list_expenses(conn))
+    assert result == {"b": 93.8, "a": 6.3}
+    assert list(result) == ["b", "a"]
+
+
+def test_share_of_empty_list_is_empty() -> None:
+    assert category_share([]) == {}
 
 
 def test_monthly(conn: sqlite3.Connection) -> None:
