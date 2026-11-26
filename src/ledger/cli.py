@@ -57,6 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=_amount,
         default=None,
         dest="min_cents",
+        metavar="AMOUNT",
         help="only expenses of at least this amount",
     )
 
