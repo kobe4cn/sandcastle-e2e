@@ -118,7 +118,7 @@ def test_budget_set_rejects_bad_amount(
 
 def test_budget_rm_missing(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["budget", "rm", "food"]) == 1
-    assert capsys.readouterr().err.startswith("error: ")
+    assert capsys.readouterr().err == "error: no budget for food\n"
 
 
 def test_budget_rm(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
