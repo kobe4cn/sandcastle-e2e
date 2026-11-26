@@ -191,10 +191,11 @@ def main(argv: list[str] | None = None) -> int:
                     for cat, cents in budgets.items():
                         print(f"{cat}\t{format_cents(cents)}")
             elif args.budget_cmd == "rm":
-                if not db.delete_budget(conn, args.category):
-                    print(f"error: no budget for {args.category}", file=sys.stderr)
+                cat = args.category
+                if not db.delete_budget(conn, cat):
+                    print(f"error: no budget for {cat}", file=sys.stderr)
                     return 1
-                print(f"removed budget for {args.category}")
+                print(f"removed budget for {cat}")
         elif args.cmd == "status":
             month = args.month or date.today().strftime("%Y-%m")
             statuses = budget_status(db.list_expenses(conn), db.list_budgets(conn), month)
