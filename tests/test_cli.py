@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import ledger
 from ledger.cli import main
 
 
@@ -46,6 +47,14 @@ def test_version(flag: str, ledger_db: Path, capsys: pytest.CaptureFixture[str])
     captured = capsys.readouterr()
     assert captured.out == f"ledger {version('ledger')}\n"
     assert captured.err == ""
+
+
+def test_version_matches_dunder(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert ledger.__version__ == version("ledger")
+    with pytest.raises(SystemExit) as exc:
+        main(["--version"])
+    assert exc.value.code == 0
+    assert capsys.readouterr().out == f"ledger {ledger.__version__}\n"
 
 
 def test_budget_set_and_list(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
