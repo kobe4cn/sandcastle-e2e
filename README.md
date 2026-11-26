@@ -15,7 +15,8 @@ uv run ledger list --json   # same, as a JSON array of objects with id, date, am
 uv run ledger delete 3   # delete an expense by id (ids come from ledger list)
 uv run ledger report
 uv run ledger report --average   # average spend per expense, by category
-uv run ledger report --category food   # only one category; combines with --average
+uv run ledger report --share   # percentage of total spending, by category; not with --average
+uv run ledger report --category food   # only one category; combines with --average or --share
 uv run ledger budget set food 300   # monthly budget for a category
 uv run ledger budget list
 uv run ledger budget list --json   # same, as a JSON object, e.g. {"food": "100.00"}
