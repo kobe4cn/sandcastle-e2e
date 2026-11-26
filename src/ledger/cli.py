@@ -47,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     report = sub.add_parser("report", help="totals by category")
     report.add_argument(
-        "--average", action="store_true", help="show the average spend per expense in each category"
+        "--average", action="store_true", help="average spend per expense, per category"
     )
 
     rm = sub.add_parser("delete", help="delete an expense by id")
@@ -91,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
             for row in expenses:
                 print(f"{row.id}\t{row.spent_on}\t{row.category}\t{format_cents(row.amount_cents)}\t{row.note}")
         elif args.cmd == "report":
-            rows = db.list_expenses(conn)
+            rows = list(db.list_expenses(conn))
             if args.average:
                 for cat, avg in average_by_category(rows).items():
                     print(f"{cat}\t{format_cents(avg)}")
