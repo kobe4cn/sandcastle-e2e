@@ -317,3 +317,22 @@ def test_list_rejects_invalid_min(
         main(["list", *min_args])
     assert exc.value.code == 2
     assert "invalid amount" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("list_args", "expected"),
+    [
+        (["--min", "3", "--limit", "1"], ["3\t2026-01-02\ttravel\t3.00\t"]),
+        (["--reverse", "--min", "2", "--limit", "1"], ["3\t2026-01-02\ttravel\t3.00\t"]),
+        (["--category", "FOOD", "--min", "2"], ["2\t2026-01-01\tfood\t2.00\t"]),
+    ],
+)
+def test_list_min_filters_before_category_reverse_and_limit(
+    ledger_db: Path,
+    capsys: pytest.CaptureFixture[str],
+    list_args: list[str],
+    expected: list[str],
+) -> None:
+    _add_three_out_of_order(capsys)
+    assert main(["list", *list_args]) == 0
+    assert capsys.readouterr().out.splitlines() == expected
