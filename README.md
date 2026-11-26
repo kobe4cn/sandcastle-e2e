@@ -23,7 +23,7 @@ uv run ledger budget list --json   # same, as a JSON object, e.g. {"food": "100.
 uv run ledger budget rm food
 uv run ledger status --month 2026-01   # spent / budget / remaining per budgeted category; default: current month
 uv run ledger status --json   # same, as a JSON array of {category, spent, budget}; combines with --month
-uv run ledger categories   # distinct expense categories, sorted
+uv run ledger categories   # distinct expense categories, sorted; prints "no categories" when there are none
 uv run ledger categories --json   # same, as a JSON array, e.g. ["food", "rent"]
 uv run ledger categories --count   # category and expense count, tab-separated
 uv run ledger count   # number of recorded expenses
