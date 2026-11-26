@@ -25,8 +25,12 @@ def expenses_to_csv(expenses: list[Expense]) -> str:
 
 def parse_csv(text: str) -> list[tuple[date, str, int, str]]:
     """Validate every row like `ledger add`; errors name the line where the bad record starts."""
-    reader = csv.DictReader(io.StringIO(text))
-    if reader.fieldnames != HEADER:
+    reader = csv.DictReader(io.StringIO(text), strict=True)
+    try:
+        fieldnames = reader.fieldnames
+    except csv.Error as e:
+        raise ValueError(f"line 1: {e}") from None
+    if fieldnames != HEADER:
         raise ValueError(f"line 1: header must be {','.join(HEADER)}")
     rows: list[tuple[date, str, int, str]] = []
     while True:
@@ -36,6 +40,8 @@ def parse_csv(text: str) -> list[tuple[date, str, int, str]]:
             row = next(reader)
         except StopIteration:
             break
+        except csv.Error as e:
+            raise ValueError(f"line {line}: {e}") from None
         try:
             rows.append(_parse_row(row))
         except ValueError as e:

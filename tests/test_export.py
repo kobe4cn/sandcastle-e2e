@@ -64,6 +64,8 @@ GOOD = "1,2026-01-02,food,1.00,ok\n"
         (HEADER + "1,2026-01-02,food,1.00,,extra\n", "line 2: too many fields"),
         ("id,date,category,amount\n", "line 1: header must be id,date,category,amount,note"),
         ("", "line 1: header must be id,date,category,amount,note"),
+        (HEADER + '1,2026-01-02,food,1.00,"open\n', "line 2: "),
+        (HEADER + "1,2026-01-02,food,1.00," + "x" * 200_000 + "\n", "line 2: "),
     ],
 )
 def test_parse_csv_rejects_bad_rows(text: str, message: str) -> None:
