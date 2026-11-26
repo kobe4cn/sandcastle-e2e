@@ -233,6 +233,8 @@ def main(argv: list[str] | None = None) -> int:
                 counts = [(cat, db.count_expenses(conn, cat)) for cat in categories]
                 for cat, n in sorted(counts, key=lambda p: -p[1]):
                     print(f"{cat}\t{n}")
+            elif not categories:
+                print("no categories")
             else:
                 for cat in categories:
                     print(cat)

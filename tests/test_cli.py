@@ -360,8 +360,19 @@ def test_categories_distinct_sorted(ledger_db: Path, capsys: pytest.CaptureFixtu
     assert capsys.readouterr().out.splitlines() == ["books", "food", "travel"]
 
 
-def test_categories_empty(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_categories_empty_prints_no_categories(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     assert main(["categories"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == "no categories\n"
+    assert captured.err == ""
+
+
+def test_categories_count_empty_prints_nothing(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["categories", "--count"]) == 0
     assert capsys.readouterr().out == ""
 
 
