@@ -15,6 +15,10 @@ from ledger.money import format_cents, parse_amount
         ("1,234.50", 123450),
         ("12,345", 1234500),
         ("1,234,567", 123456700),
+        ("$12.50", 1250),
+        ("12.50", 1250),
+        ("$1,234.50", 123450),
+        (" $5", 500),
     ],
 )
 def test_parse(text: str, cents: int) -> None:
@@ -35,10 +39,20 @@ def test_parse(text: str, cents: int) -> None:
         "100,",
         "01,234",
         "1, 234",
+        "-$5",
+        "$-5",
+        "$0",
+        "$ 5",
     ],
 )
 def test_parse_rejects(text: str) -> None:
     with pytest.raises(ValueError):
+        parse_amount(text)
+
+
+@pytest.mark.parametrize("text", ["$", "$$1", "$ 5"])
+def test_parse_rejects_malformed_dollar_sign_as_not_a_number(text: str) -> None:
+    with pytest.raises(ValueError, match=r"^not a number: "):
         parse_amount(text)
 
 

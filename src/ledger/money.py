@@ -11,8 +11,15 @@ _GROUPED = re.compile(r"^[1-9]\d{0,2}(,\d{3})+(\.\d*)?$")
 
 
 def parse_amount(text: str) -> int:
-    """'12.5' -> 1250, '1,234.50' -> 123450. Rejects negatives, zero and more than two decimals."""
-    cleaned = text.strip()
+    """'12.5' -> 1250, '$12.50' -> 1250, '1,234.50' -> 123450.
+
+    Rejects negatives, zero and more than two decimals.
+    """
+    # Strip the "$" before the comma check so "$1,234.50" still matches _GROUPED.
+    cleaned = text.strip().removeprefix("$")
+    # Decimal ignores leading whitespace, so "$ 5" would otherwise slip through.
+    if cleaned[:1].isspace():
+        raise ValueError(f"not a number: {text!r}")
     if "," in cleaned:
         if not _GROUPED.match(cleaned):
             raise ValueError(f"not a number: {text!r}")

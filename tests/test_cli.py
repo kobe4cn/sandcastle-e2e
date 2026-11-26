@@ -24,6 +24,15 @@ def test_add_rejects_bad_amount(ledger_db: Path, capsys: pytest.CaptureFixture[s
     assert "not a number" in capsys.readouterr().err
 
 
+def test_add_accepts_leading_dollar_sign(
+    ledger_db: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["add", "$12.50", "food", "--on", "2026-01-02"]) == 0
+    capsys.readouterr()
+    assert main(["list"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["1\t2026-01-02\tfood\t12.50\t"]
+
+
 def test_delete_missing(ledger_db: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["delete", "9"]) == 1
     assert "no expense #9" in capsys.readouterr().err
