@@ -1,4 +1,4 @@
-"""Money is stored as integer cents; convert only at the edges."""
+"""Parse and format money amounts; money is stored as integer cents, converted only at the edges."""
 
 from __future__ import annotations
 
