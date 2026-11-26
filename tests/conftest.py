@@ -22,9 +22,3 @@ def ledger_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     path = tmp_path / "cli.db"
     monkeypatch.setenv("LEDGER_DB", str(path))
     return path
-
-
-def pytest_sessionstart(session):  # temporary: e2e idle-watchdog test, remove afterwards
-    import time
-
-    time.sleep(40)
