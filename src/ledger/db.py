@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS budgets (
 );
 """
 
+MAX_NOTE_LEN = 200
+
 
 @dataclass(frozen=True)
 class Expense:
@@ -47,10 +49,18 @@ def _validated_category(category: str, amount_cents: int) -> str:
     return category
 
 
+def _validated_note(note: str) -> str:
+    # Counted in code points, not stripped: the note is stored exactly as the user typed it.
+    if len(note) > MAX_NOTE_LEN:
+        raise ValueError(f"note must be at most {MAX_NOTE_LEN} characters")
+    return note
+
+
 def add_expense(
     conn: sqlite3.Connection, spent_on: date, category: str, amount_cents: int, note: str = ""
 ) -> int:
     category = _validated_category(category, amount_cents)
+    note = _validated_note(note)
     cur = conn.execute(
         "INSERT INTO expenses (spent_on, category, amount_cents, note) VALUES (?, ?, ?, ?)",
         (spent_on.isoformat(), category, amount_cents, note),
