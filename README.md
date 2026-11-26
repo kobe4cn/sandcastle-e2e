@@ -57,7 +57,9 @@ with the budgets:
 uv run ledger add 12.50 food --on 2026-01-02
 # Added #1
 uv run ledger budget set food 10
+# budget for food set to 10.00
 uv run ledger budget set travel 50
+# budget for travel set to 50.00
 uv run ledger budget list
 # food	10.00
 # travel	50.00
@@ -72,7 +74,7 @@ uv run ledger budget rm travel
 # removed budget for travel
 ```
 
-`budget set` prints nothing on success. Setting a category again replaces its budget, and
+`budget set` prints `budget for <category> set to <amount>` on success. Setting a category again replaces its budget, and
 categories are stored trimmed and lowercased (`Food` and `food` are the same budget). An invalid
 amount prints e.g. `error: amount must be positive` to stderr and exits with status 2.
 

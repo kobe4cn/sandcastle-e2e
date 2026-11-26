@@ -169,10 +169,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "budget":
             if args.budget_cmd == "set":
                 try:
-                    db.set_budget(conn, args.category, parse_amount(args.amount))
+                    cents = parse_amount(args.amount)
+                    db.set_budget(conn, args.category, cents)
                 except ValueError as e:
                     print(f"error: {e}", file=sys.stderr)
                     return 2
+                print(f"budget for {args.category.strip().lower()} set to {format_cents(cents)}")
             elif args.budget_cmd == "list":
                 budgets = db.list_budgets(conn)
                 if args.json:
